@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  # PostgreSQL для Django
+  db_bookshop:
+    image: postgres:15
+    container_name: db_bookshop
+    platform: linux/amd64
+    restart: always
+    environment:
+      POSTGRES_USER: aliquser
+      POSTGRES_PASSWORD: dbpass
+      POSTGRES_DB: bookshop
+    volumes:
+      - bookshop_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Django (bookshop)
+  web_bookshop:
+    build:
+      context: ./bookshop
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    working_dir: /app/bookshop
+    command: >
+      bash -c "
+        python manage.py makemigrations &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - ./bookshop:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://aliquser:dbpass@db_bookshop:5432/bookshop
+    depends_on:
+      - db_bookshop
+
+  # PostgreSQL для FastAPI
+  db_api:
+    image: postgres:15
+    container_name: db_api
+    platform: linux/amd64
+    restart: always
+    environment:
+      POSTGRES_USER: apistore_user
+      POSTGRES_PASSWORD: apipass
+      POSTGRES_DB: api_store
+    volumes:
+      - apistore_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  # FastAPI (api-store)
+  api_store:
+    build:
+      context: ./api-store
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    working_dir: /app
+    command: >
+      bash -c "
+        uvicorn app.main:app --host 0.0.0.0 --port 5050 --reload
+      "
+    volumes:
+      - ./api-store:/app
+    ports:
+      - "5050:5050"
+    environment:
+      DB_HOST: db_api
+      DB_PORT: "5432"
+      DB_NAME: api_store
+      DB_USER: apistore_user
+      DB_PASS: apipass
+    depends_on:
+      - db_api
+
+volumes:
+  bookshop_data:
+  apistore_data:
