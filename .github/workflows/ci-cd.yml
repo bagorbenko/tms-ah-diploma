@@ -51,12 +51,12 @@ jobs:
       - name: Install & test bookshop
         working-directory: bookshop
         env:
-          DATABASE_URL: sqlite:///:memory:
-          DB_HOST:     ${{ secrets.DB_BOOKSHOP_HOST }}
-          DB_PORT:     ${{ secrets.DB_BOOKSHOP_PORT }}
-          DB_NAME:     ${{ secrets.DB_BOOKSHOP_NAME }}
-          DB_USER:     ${{ secrets.DB_BOOKSHOP_USER }}
-          DB_PASS:     ${{ secrets.DB_BOOKSHOP_PASSWORD }}
+          DATABASE_URL: "sqlite:///:memory:"
+          DB_HOST: ${{ secrets.DB_BOOKSHOP_HOST }}
+          DB_PORT: ${{ secrets.DB_BOOKSHOP_PORT }}
+          DB_NAME: ${{ secrets.DB_BOOKSHOP_NAME }}
+          DB_USER: ${{ secrets.DB_BOOKSHOP_USER }}
+          DB_PASS: ${{ secrets.DB_BOOKSHOP_PASSWORD }}
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -128,7 +128,7 @@ jobs:
             --from-literal=DB_PORT=${{ secrets.DB_API_PORT }} \
             --from-literal=DB_NAME=${{ secrets.DB_API_NAME }} \
             --from-literal=DB_USER=${{ secrets.DB_API_USER }} \
-            --from-literal=DB_PASS=${{ secrets.DB_API_PASSWORD }} \   # <— use DB_PASS, not DB_PASSWORD
+            --from-literal=DB_PASS=${{ secrets.DB_API_PASSWORD }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy API-store
