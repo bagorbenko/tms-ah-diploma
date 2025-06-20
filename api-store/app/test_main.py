@@ -4,14 +4,13 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from app.models import PurchaseModel
 
-
 fake = Faker()
 
 
 @pytest.fixture
 def client():
-    from main import app
-
+    # Импортируем приложение из пакета app
+    from app.main import app
     return TestClient(app)
 
 
@@ -19,24 +18,14 @@ class PurchaseFactory(factory.Factory):
     class Meta:
         model = PurchaseModel
 
-    order_id = factory.LazyAttribute(
-        lambda o: int(fake.random_int(min=1, max=500, step=1))
-    )
-    book_id = factory.LazyAttribute(
-        lambda o: int(fake.random_int(min=1, max=1000, step=1))
-    )
-    user_id = factory.LazyAttribute(
-        lambda o: int(fake.random_int(min=1, max=20, step=1))
-    )
+    order_id = factory.LazyAttribute(lambda o: fake.random_int(min=1, max=500, step=1))
+    book_id = factory.LazyAttribute(lambda o: fake.random_int(min=1, max=1000, step=1))
+    user_id = factory.LazyAttribute(lambda o: fake.random_int(min=1, max=20, step=1))
     book_title = factory.LazyAttribute(lambda o: fake.word())
     author_name = factory.LazyAttribute(lambda o: fake.name())
-    price = factory.LazyAttribute(
-        lambda o: int(fake.random_int(min=100, max=5000, step=1))
-    )
+    price = factory.LazyAttribute(lambda o: fake.random_int(min=100, max=5000, step=1))
     create_at = factory.LazyAttribute(lambda o: str(fake.date()))
-    publisher_id = factory.LazyAttribute(
-        lambda o: int(fake.random_int(min=1, max=20, step=1))
-    )
+    publisher_id = factory.LazyAttribute(lambda o: fake.random_int(min=1, max=20, step=1))
 
     @classmethod
     def as_dict(cls, **kwargs):
@@ -54,8 +43,7 @@ class PurchaseFactory(factory.Factory):
 
 
 def test_create_purchase(client):
-    data = []
-    purchase = PurchaseFactory.as_dict()
-    data.append(purchase)
-    response = client.post("/purchases/", json=data)
+    # Формируем данные и отправляем POST на /purchases/
+    purchase_data = PurchaseFactory.as_dict()
+    response = client.post("/purchases/", json=[purchase_data])
     assert response.status_code == 200
