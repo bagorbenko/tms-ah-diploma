@@ -1,21 +1,16 @@
-# api-store/app/config.py
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-load_dotenv()  # автоматически найдёт ./app/.env
+load_dotenv()  # автоматически подгрузит .env из ./app
 
-# читаем из отдельных переменных
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASS = os.getenv("DB_PASS")
+# 1) Сначала пробуем взять готовый URL (например, sqlite:///:memory:)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# собираем полную строку подключения
-DATABASE_URL = (
-    f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
-
-# Если вы предпочитаете сразу давать DATABASE_URL в .env,
-# можно вместо этого просто:
-# DATABASE_URL = os.getenv("DATABASE_URL")
+# 2) Если он не задан — строим Postgres-строку из DB_*
+if not DATABASE_URL:
+    db_user = os.getenv("DB_USER", "")
+    db_pass = os.getenv("DB_PASS", "")
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_port = os.getenv("DB_PORT", "5432")
+    db_name = os.getenv("DB_NAME", "")
+    DATABASE_URL = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
