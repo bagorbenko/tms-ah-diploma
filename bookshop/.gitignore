@@ -7,6 +7,15 @@ db.sqlite3
 media
 */migrations/*
 
+# Django static files
+staticfiles/
+static/
+STATIC_ROOT/
+
+# Django local settings
+local_settings.py
+settings_local.py
+
 # Backup files #
 *.bak
 
@@ -107,7 +116,6 @@ venv.bak/
 # mkdocs documentation
 /site
 
-
 # sftp configuration file
 sftp-config.json
 
@@ -119,3 +127,36 @@ Control.system-ca-bundle
 GitHub.sublime-settings
 
 .idea/
+
+# =========================
+# Additional rules
+# =========================
+
+# VS Code
+.vscode/
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Django Rest Framework
+# (usually no specific ignores needed)
+
+# Factory Boy test data
+factory_test_data/
+
+# Docker
+docker-compose.override.yml

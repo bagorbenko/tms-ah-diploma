@@ -75,10 +75,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Setup GCP credentials file
+        run: |
+          # Создаем JSON файл с правильным экранированием
+          cat > gcp-key.json << 'EOF'
+          ${{ secrets.GCP_SA_KEY }}
+          EOF
+          
+          # Проверяем валидность JSON
+          if ! python3 -m json.tool gcp-key.json > /dev/null 2>&1; then
+            echo "ERROR: Invalid JSON in GCP_SA_KEY secret"
+            echo "First 100 characters:"
+            head -c 100 gcp-key.json | cat -v
+            exit 1
+          fi
+          
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json" >> $GITHUB_ENV
+          echo "GCP credentials file created successfully"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -106,10 +119,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Setup GCP credentials file
+        run: |
+          # Создаем JSON файл с правильным экранированием
+          cat > gcp-key.json << 'EOF'
+          ${{ secrets.GCP_SA_KEY }}
+          EOF
+          
+          # Проверяем валидность JSON
+          if ! python3 -m json.tool gcp-key.json > /dev/null 2>&1; then
+            echo "ERROR: Invalid JSON in GCP_SA_KEY secret"
+            echo "First 100 characters:"
+            head -c 100 gcp-key.json | cat -v
+            exit 1
+          fi
+          
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json" >> $GITHUB_ENV
+          echo "GCP credentials file created successfully"
 
       - name: Setup GCloud CLI
         uses: google-github-actions/setup-gcloud@v2

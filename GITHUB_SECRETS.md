@@ -104,11 +104,67 @@ ID проекта Google Cloud Platform.
 
 ## Troubleshooting
 
-### Ошибка "credentials is neither valid json nor a valid file path"
+### Ошибка "credentials is neither valid json nor a valid file path" или "bad control character in string literal"
 
-- Убедитесь что `GCP_SA_KEY` содержит корректный JSON
-- Проверьте что JSON не содержит лишних пробелов или символов
-- Убедитесь что сервисный аккаунт имеет необходимые права
+**Причины:**
+- Секрет `GCP_SA_KEY` содержит поврежденные данные
+- JSON был неправильно скопирован или закодирован
+- Файл был сохранен в неправильной кодировке
+- JSON содержит неэкранированные управляющие символы (например, символы новой строки в private_key)
+
+**Решение:**
+1. **Пересоздайте JSON ключ:**
+   - Google Cloud Console → IAM & Admin → Service Accounts
+   - Выберите аккаунт → Keys → Add Key → Create new key → JSON
+   
+2. **Правильно скопируйте JSON:**
+   ```bash
+   # Проверьте содержимое файла
+   cat downloaded-key.json
+   
+   # Он должен начинаться с { и заканчиваться }
+   # Пример:
+   {
+     "type": "service_account",
+     "project_id": "your-project",
+     ...
+   }
+   
+   # Проверьте валидность JSON
+   python3 -m json.tool downloaded-key.json > /dev/null
+   echo "JSON is valid"
+   
+   # Проверьте на наличие управляющих символов
+   cat -A downloaded-key.json | head -20
+   ```
+
+3. **Обновите секрет в GitHub:**
+   - Settings → Secrets and variables → Actions
+   - Update `GCP_SA_KEY`
+   - Вставьте JSON **точно как есть**
+
+4. **Проверьте права сервисного аккаунта:**
+   - `Editor` или `Owner`
+   - `Storage Admin` (для Terraform state)
+   - `Kubernetes Engine Admin` (для GKE)
+
+5. **Если проблема с управляющими символами:**
+   ```bash
+   # Очистите JSON от лишних символов
+   python3 -c "
+   import json
+   import sys
+   
+   with open('downloaded-key.json', 'r') as f:
+       data = json.load(f)
+   
+   with open('cleaned-key.json', 'w') as f:
+       json.dump(data, f, separators=(',', ':'))
+   "
+   
+   # Скопируйте содержимое очищенного файла
+   cat cleaned-key.json
+   ```
 
 ### Ошибка подключения к базе данных
 
