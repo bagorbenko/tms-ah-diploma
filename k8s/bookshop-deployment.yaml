@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookshop-deployment
+  namespace: bookshop
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bookshop
+  template:
+    metadata:
+      labels:
+        app: bookshop
+    spec:
+      containers:
+      - name: bookshop
+        image: eu.gcr.io/${GCP_PROJECT}/bookshop:${GITHUB_SHA}
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: bookshop-secret
+              key: DATABASE_URL
