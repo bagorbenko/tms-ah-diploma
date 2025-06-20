@@ -55,10 +55,38 @@ def test_order_send_purchase_data_mocked(mock_api_requests):
     book = BookInstanceFactory(count=5)
     cart_item = CartItemFactory(cart=cart, book_instance=book, count=2)
     
-    # Временно отключаем переменную TESTING для проверки мока
-    with patch.dict('os.environ', {'TESTING': 'false'}):
+    # Временно отключаем переменные TESTING и DATABASE_URL для проверки мока
+    with patch.dict('os.environ', {'TESTING': 'false', 'DATABASE_URL': 'postgresql://test:test@localhost:5432/test'}):
         order = Order(user=user, cart=cart)
         order.save()
         
         # Проверяем что мок был вызван
         assert mock_api_requests.called
+
+
+@pytest.mark.django_db
+def test_order_basic_functionality():
+    """Базовый тест функциональности Order без мокирования API"""
+    user = UserFactory()
+    cart = user.cart
+    book = BookInstanceFactory(count=5, price=100)
+    cart_item = CartItemFactory(cart=cart, book_instance=book, count=2)
+    
+    # Сохраняем количество CartItem до создания заказа
+    initial_cart_items = CartItem.objects.count()
+    initial_book_count = book.count
+    
+    # Создаем заказ (API вызов будет пропущен в тестовой среде)
+    order = Order(user=user, cart=cart)
+    order.save()
+    
+    # Проверяем что заказ создался
+    assert Order.objects.filter(id=order.id).exists()
+    assert order.total_price > 0
+    
+    # Проверяем что CartItem были удалены
+    assert CartItem.objects.count() == 0
+    
+    # Проверяем что количество книг уменьшилось
+    book.refresh_from_db()
+    assert book.count == initial_book_count - cart_item.count

@@ -26,8 +26,10 @@ class Order(models.Model):
         return total_price
 
     def send_purchase_data(self):
-        # Пропускаем отправку данных в тестовой среде
-        if os.getenv('TESTING') == 'true' or os.getenv('DATABASE_URL', '').startswith('sqlite'):
+        # Пропускаем отправку данных в тестовой среде или если отключено
+        if (os.getenv('TESTING') == 'true' or 
+            os.getenv('DISABLE_API_CALLS') == 'true' or
+            os.getenv('DATABASE_URL', '').startswith('sqlite')):
             print("Тестовая среда: отправка данных в API пропущена")
             return
             
