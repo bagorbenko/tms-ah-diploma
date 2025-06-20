@@ -2,7 +2,7 @@ import factory
 import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
-from models import PurchaseModel
+from app.models import PurchaseModel
 
 
 fake = Faker()
