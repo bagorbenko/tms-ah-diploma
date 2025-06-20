@@ -6,14 +6,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models import PurchaseModel
 from app.database import Base
-from app.main import app, get_db
 import os
 
 fake = Faker()
 
 # Создаем отдельную тестовую базу данных
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, echo=False)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def override_get_db():
@@ -22,8 +21,6 @@ def override_get_db():
         yield db
     finally:
         db.close()
-
-app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
@@ -34,9 +31,15 @@ def setup_test_db():
 
 @pytest.fixture
 def client():
-    # Импортируем приложение из пакета app
-    return TestClient(app)
-
+    # Импортируем приложение из пакета app и переопределяем зависимость
+    from app.main import app, get_db
+    app.dependency_overrides[get_db] = override_get_db
+    
+    with TestClient(app) as test_client:
+        yield test_client
+    
+    # Очищаем переопределения после использования
+    app.dependency_overrides.clear()
 
 class PurchaseFactory(factory.Factory):
     class Meta:
@@ -71,3 +74,10 @@ def test_create_purchase(client):
     purchase_data = PurchaseFactory.as_dict()
     response = client.post("/purchases/", json=[purchase_data])
     assert response.status_code == 200
+
+
+def test_get_all_purchases(client):
+    # Тест получения всех покупок
+    response = client.get("/purchases")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
