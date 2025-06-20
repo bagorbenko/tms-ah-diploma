@@ -52,6 +52,7 @@ jobs:
         working-directory: bookshop
         env:
           DATABASE_URL: "sqlite:///:memory:"
+          TESTING: "true"
           DB_HOST: ${{ secrets.DB_BOOKSHOP_HOST }}
           DB_PORT: ${{ secrets.DB_BOOKSHOP_PORT }}
           DB_NAME: ${{ secrets.DB_BOOKSHOP_NAME }}

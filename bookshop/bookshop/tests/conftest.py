@@ -6,16 +6,37 @@ django.setup()
 
 import pytest
 from rest_framework.test import APIClient
+from django.contrib.auth import get_user_model
+from unittest.mock import patch
 
 from books.models import Category, Genre, Author, Publisher, Book, BookInstance
 from cart.models import Cart, CartItem
 from order.models import Order
-from user.models import User
+
+User = get_user_model()
 
 
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+@pytest.fixture
+def user():
+    return User.objects.create_user(
+        username="testuser",
+        email="test@example.com", 
+        password="testpass123"
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_api_requests():
+    """Автоматически мокирует все HTTP запросы к API сервису"""
+    with patch('order.models.requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {"status": "success"}
+        yield mock_post
 
 
 @pytest.fixture

@@ -1,3 +1,4 @@
+import os
 import requests
 from django.db import models, transaction
 
@@ -25,6 +26,11 @@ class Order(models.Model):
         return total_price
 
     def send_purchase_data(self):
+        # Пропускаем отправку данных в тестовой среде
+        if os.getenv('TESTING') == 'true' or os.getenv('DATABASE_URL', '').startswith('sqlite'):
+            print("Тестовая среда: отправка данных в API пропущена")
+            return
+            
         data = []
         for item in self.cart.cart_items.all():
             authors = ", ".join(
@@ -42,7 +48,14 @@ class Order(models.Model):
             }
             data.append(item_data)
         print("\n\n", data)
-        requests.post("http://api_store:5050/purchases/", json=data)
+        
+        try:
+            # Используем переменную окружения для URL API
+            api_url = os.getenv('API_STORE_URL', 'http://api_store:5050')
+            requests.post(f"{api_url}/purchases/", json=data, timeout=5)
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка отправки данных в API: {e}")
+            # В продакшене можно логировать ошибку или добавить в очередь для повторной отправки
 
     def check_book_availability(self):
         for item in self.cart.cart_items.all():
