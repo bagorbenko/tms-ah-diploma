@@ -1,24 +1,14 @@
-# from sqlalchemy import create_engine
-# from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy.orm import sessionmaker
-#
-#
-# SQLALCHEMY_DATABASE_URL = "postgresql://aliaksei:Maskat06@127.0.0.1:5432/api-store"
-# engine = create_engine(
-#     SQLALCHEMY_DATABASE_URL,
-# )
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-#
-# Base = declarative_base()
-
-# api-store/app/database.py
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.config import DATABASE_URL
 
-engine = create_engine(DATABASE_URL, echo=True)
+# Добавляем проверку для тестового окружения
+if "test" in DATABASE_URL.lower() or "memory" in DATABASE_URL.lower():
+    engine = create_engine(DATABASE_URL, echo=False)
+else:
+    engine = create_engine(DATABASE_URL, echo=True)
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -27,4 +17,11 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
+
+# Функция для создания таблиц (используется в main.py)
+def create_tables():
+    """Создает таблицы в базе данных"""
+    # Импортируем модели, чтобы они были зарегистрированы
+    from app import models
+    Base.metadata.create_all(bind=engine)
 

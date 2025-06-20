@@ -2,15 +2,39 @@ import factory
 import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from app.models import PurchaseModel
+from app.database import Base
+from app.main import app, get_db
+import os
 
 fake = Faker()
 
+# Создаем отдельную тестовую базу данных
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")
+engine = create_engine(DATABASE_URL)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+app.dependency_overrides[get_db] = override_get_db
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_db():
+    """Настройка тестовой базы данных"""
+    Base.metadata.create_all(bind=engine)
+    yield
+    Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture
 def client():
     # Импортируем приложение из пакета app
-    from app.main import app
     return TestClient(app)
 
 

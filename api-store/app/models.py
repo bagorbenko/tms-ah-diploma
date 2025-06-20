@@ -1,8 +1,5 @@
 from sqlalchemy import MetaData, Table, Column, Integer, String, Float, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-
-
-Base = declarative_base()
+from app.database import Base
 
 
 class PurchaseModel(Base):

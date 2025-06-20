@@ -6,11 +6,10 @@ from fastapi.exceptions import ValidationError, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app import crud, models, schemas
-from app.database import SessionLocal
-from app.database import engine
+from app.database import SessionLocal, create_tables
 
 
-models.Base.metadata.create_all(bind=engine)
+create_tables()
 
 
 app = FastAPI()
