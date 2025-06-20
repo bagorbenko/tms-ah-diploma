@@ -4,7 +4,7 @@ metadata:
   name: api-store-deployment
   namespace: api-store
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api-store
@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         app: api-store
+        version: diploma
     spec:
       containers:
       - name: api-store
@@ -21,3 +22,22 @@ spec:
         envFrom:
         - secretRef:
             name: api-store-secret
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5050
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5050
+          initialDelaySeconds: 5
+          periodSeconds: 5
