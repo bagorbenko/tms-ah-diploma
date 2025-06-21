@@ -106,14 +106,41 @@ jobs:
         run: |
           # Для дипломного проекта - снимаем блокировку если есть
           terraform force-unlock -force 1750463563473736 || true
-          # Если блокировка все еще есть - используем -lock=false для диплома
+          
+          # Проверяем существующие ресурсы и импортируем если нужно
+          echo "Проверяем существующие ресурсы..."
+          
+          # Импортируем кластер если он существует, но не в state
+          if ! terraform state show google_container_cluster.primary 2>/dev/null; then
+            echo "Импортируем существующий кластер..."
+            terraform import -lock=false google_container_cluster.primary projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster || echo "Кластер не найден или уже импортирован"
+          fi
+          
+          # Импортируем node pool если он существует, но не в state
+          if ! terraform state show google_container_node_pool.primary_nodes 2>/dev/null; then
+            echo "Импортируем существующий node pool..."
+            terraform import -lock=false google_container_node_pool.primary_nodes projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster/nodePools/diploma-cluster-node-pool || echo "Node pool не найден или уже импортирован"
+          fi
+          
+          # Планируем изменения
           terraform plan -input=false -out=tfplan -lock=false || terraform plan -input=false -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: |
-          # Применяем план с автоматическим решением блокировки
-          terraform apply -input=false tfplan || terraform apply -input=false -auto-approve -lock=false
+          # Попытаемся применить план
+          if ! terraform apply -input=false tfplan; then
+            echo "Ресурсы уже существуют, импортируем их в state..."
+            
+            # Импортируем кластер если он существует
+            terraform import -lock=false google_container_cluster.primary projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster || true
+            
+            # Импортируем node pool если он существует  
+            terraform import -lock=false google_container_node_pool.primary_nodes projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster/nodePools/diploma-cluster-node-pool || true
+            
+            # Повторно применяем после импорта
+            terraform apply -input=false -auto-approve -lock=false
+          fi
 
   deploy:
     needs: terraform
