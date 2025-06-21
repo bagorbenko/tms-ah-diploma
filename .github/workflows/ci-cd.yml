@@ -96,51 +96,32 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
+      - name: Enable Required APIs
+        run: |
+          # Включаем необходимые API для GKE
+          gcloud services enable container.googleapis.com
+          gcloud services enable compute.googleapis.com
+          gcloud services enable cloudresourcemanager.googleapis.com
+          echo "✅ APIs enabled successfully"
+
       - name: Terraform Init
         run: |
           terraform init -input=false \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="prefix=terraform/state"
 
-      - name: Terraform Plan
+      - name: Clear Terraform State (fresh start)
         run: |
-          # Для дипломного проекта - снимаем блокировку если есть
+          # Очищаем state для чистого создания
           terraform force-unlock -force 1750463563473736 || true
-          
-          # Проверяем существующие ресурсы и импортируем если нужно
-          echo "Проверяем существующие ресурсы..."
-          
-          # Импортируем кластер если он существует, но не в state
-          if ! terraform state show google_container_cluster.primary 2>/dev/null; then
-            echo "Импортируем существующий кластер..."
-            terraform import -lock=false google_container_cluster.primary projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster || echo "Кластер не найден или уже импортирован"
-          fi
-          
-          # Импортируем node pool если он существует, но не в state
-          if ! terraform state show google_container_node_pool.primary_nodes 2>/dev/null; then
-            echo "Импортируем существующий node pool..."
-            terraform import -lock=false google_container_node_pool.primary_nodes projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster/nodePools/diploma-cluster-node-pool || echo "Node pool не найден или уже импортирован"
-          fi
-          
-          # Планируем изменения
-          terraform plan -input=false -out=tfplan -lock=false || terraform plan -input=false -out=tfplan
+          echo "🧹 State cleared for fresh deployment"
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        run: |
-          # Попытаемся применить план
-          if ! terraform apply -input=false tfplan; then
-            echo "Ресурсы уже существуют, импортируем их в state..."
-            
-            # Импортируем кластер если он существует
-            terraform import -lock=false google_container_cluster.primary projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster || true
-            
-            # Импортируем node pool если он существует  
-            terraform import -lock=false google_container_node_pool.primary_nodes projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe-west3/clusters/diploma-cluster/nodePools/diploma-cluster-node-pool || true
-            
-            # Повторно применяем после импорта
-            terraform apply -input=false -auto-approve -lock=false
-          fi
+        run: terraform apply -input=false tfplan
 
   deploy:
     needs: terraform
