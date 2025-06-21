@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "sinuous-vent-463114-h1-terraform-state"
+    bucket = "tms-ah-diploma-terraform-state-1750537145"
     prefix = "terraform/state"
   }
 }
