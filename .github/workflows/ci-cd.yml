@@ -105,6 +105,9 @@ jobs:
           PROJECT_ID=$(cat $GOOGLE_APPLICATION_CREDENTIALS | python3 -c "import sys, json; print(json.load(sys.stdin)['project_id'])")
           echo "Detected project ID: $PROJECT_ID"
           
+          # Сохраняем в environment для других шагов
+          echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
+          
           # Устанавливаем проект
           gcloud config set project $PROJECT_ID
           echo "✅ GCP authentication completed for project: $PROJECT_ID"
@@ -165,8 +168,12 @@ jobs:
             exit 1
           fi
           
+          # Получаем project ID и сохраняем в environment
+          PROJECT_ID=$(cat gcp-key.json | python3 -c "import sys, json; print(json.load(sys.stdin)['project_id'])")
+          echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
+          
           echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json" >> $GITHUB_ENV
-          echo "GCP credentials file created successfully"
+          echo "GCP credentials file created successfully for project: $PROJECT_ID"
 
       - name: Setup GCloud CLI
         uses: google-github-actions/setup-gcloud@v2
@@ -176,6 +183,7 @@ jobs:
         with:
           cluster_name: diploma-cluster
           location: europe-west3
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Create namespaces
         run: |
