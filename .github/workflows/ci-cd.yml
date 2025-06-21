@@ -96,13 +96,21 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
+      - name: Authenticate with GCP
+        run: |
+          # Активируем service account
+          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          echo "✅ GCP authentication completed"
+
       - name: Enable Required APIs
         run: |
-          # Включаем необходимые API для GKE
-          gcloud services enable container.googleapis.com
-          gcloud services enable compute.googleapis.com
-          gcloud services enable cloudresourcemanager.googleapis.com
-          echo "✅ APIs enabled successfully"
+          # Устанавливаем проект и включаем необходимые API для GKE
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud services enable container.googleapis.com --project=${{ secrets.GCP_PROJECT_ID }}
+          gcloud services enable compute.googleapis.com --project=${{ secrets.GCP_PROJECT_ID }}
+          gcloud services enable cloudresourcemanager.googleapis.com --project=${{ secrets.GCP_PROJECT_ID }}
+          echo "✅ APIs enabled successfully for project ${{ secrets.GCP_PROJECT_ID }}"
 
       - name: Terraform Init
         run: |
