@@ -66,8 +66,8 @@ output "node_pool_name" {
 }
 
 output "service_account_email" {
-  description = "GKE service account email"
-  value       = google_service_account.gke_service_account.email
+  description = "GKE service account email (using default)"
+  value       = "default"
 }
 
 output "dns_zone_name_servers" {
