@@ -96,12 +96,12 @@ jobs:
         run: |
           echo "Checking existing GKE resources..."
           gcloud container clusters list --format="table(name,location,status)"
-          gcloud container node-pools list --cluster=diploma-cluster --location=europe-west3 --format="table(name,status,nodeCount)" || echo "No node pools found"
+          gcloud container node-pools list --cluster=diploma-cluster-dev-dev --location=europe-west1-b --format="table(name,status,nodeCount)" || echo "No node pools found"
 
       - name: Terraform Plan
         run: |
           # Только планируем, не применяем если инфраструктура уже существует
-          if gcloud container clusters describe diploma-cluster --location=europe-west3 --format="value(status)" | grep -q "RUNNING"; then
+          if gcloud container clusters describe diploma-cluster-dev --location=europe-west1-b --format="value(status)" | grep -q "RUNNING"; then
             echo "✅ Infrastructure already exists and running"
             echo "Skipping terraform apply to avoid duplication"
           else
@@ -111,7 +111,7 @@ jobs:
       - name: Terraform Apply
         run: |
           # Применяем только если кластер не существует
-          if gcloud container clusters describe diploma-cluster --location=europe-west3 --format="value(status)" | grep -q "RUNNING"; then
+          if gcloud container clusters describe diploma-cluster-dev --location=europe-west1-b --format="value(status)" | grep -q "RUNNING"; then
             echo "✅ Cluster already exists, skipping apply"
           else
             echo "Creating new infrastructure..."
@@ -141,8 +141,8 @@ jobs:
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
-          cluster_name: diploma-cluster
-          location: europe-west3
+          cluster_name: diploma-cluster-dev
+          location: europe-west1-b
           project_id: ${{ env.PROJECT_ID }}
 
       - name: Deploy applications

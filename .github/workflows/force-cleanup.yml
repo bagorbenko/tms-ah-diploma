@@ -37,7 +37,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "🔥 Deleting GKE clusters..."
-          gcloud container clusters delete diploma-cluster-dev --region=europe-west3 --quiet || true
+          gcloud container clusters delete diploma-cluster-dev --region=europe-west1-b --quiet || true
           gcloud container clusters delete diploma-cluster-dev --region=europe-west1 --quiet || true
           gcloud container clusters delete diploma-cluster-qa --region=europe-west1 --quiet || true
           gcloud container clusters delete diploma-cluster-prod --region=europe-west1 --quiet || true

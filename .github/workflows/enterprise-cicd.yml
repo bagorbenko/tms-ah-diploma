@@ -260,7 +260,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: diploma-${{ needs.init.outputs.environment }}
-          location: europe-west3
+          location: europe-west1-b
           project_id: ${{ env.PROJECT_ID }}
           
       - name: Deploy to Kubernetes
@@ -294,7 +294,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: diploma-${{ needs.init.outputs.environment }}
-          location: europe-west3
+          location: europe-west1-b
           project_id: ${{ env.PROJECT_ID }}
           
       - name: Setup DuckDNS domains
