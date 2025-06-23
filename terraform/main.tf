@@ -9,51 +9,23 @@ resource "google_container_cluster" "diploma_cluster" {
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  # Network settings
-  network    = google_compute_network.vpc.name
-  subnetwork = google_compute_subnetwork.subnet.name
+  # Use default network to reduce complexity and resource usage
+  network    = "default"
+  subnetwork = "default"
 
-  # IP allocation policy for VPC-native networking
-  ip_allocation_policy {
-    cluster_secondary_range_name  = "pods"
-    services_secondary_range_name = "services"
-  }
+  # Disable advanced features to reduce resource requirements
+  # network_policy {
+  #   enabled = false
+  # }
 
-  # Master authorized networks (for production security)
-  dynamic "master_authorized_networks_config" {
-    for_each = var.environment == "prod" ? [1] : []
-    content {
-      dynamic "cidr_blocks" {
-        for_each = var.authorized_networks
-        content {
-          cidr_block   = cidr_blocks.value.cidr_block
-          display_name = cidr_blocks.value.display_name
-        }
-      }
-    }
-  }
+  # Disable workload identity for free tier
+  # workload_identity_config {
+  #   workload_pool = "${var.project}.svc.id.goog"
+  # }
 
-  # Network policy
-  network_policy {
-    enabled = var.enable_network_policy
-  }
-
-  # Binary authorization (for prod)
-  dynamic "binary_authorization" {
-    for_each = var.environment == "prod" ? [1] : []
-    content {
-      evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
-    }
-  }
-
-  # Workload Identity
-  workload_identity_config {
-    workload_pool = "${var.project}.svc.id.goog"
-  }
-
-  # Monitoring and logging
-  logging_service    = var.enable_monitoring ? "logging.googleapis.com/kubernetes" : "none"
-  monitoring_service = var.enable_monitoring ? "monitoring.googleapis.com/kubernetes" : "none"
+  # Minimal monitoring and logging for free tier
+  logging_service    = "none"
+  monitoring_service = "none"
 
   # Resource labels
   resource_labels = {
@@ -62,37 +34,38 @@ resource "google_container_cluster" "diploma_cluster" {
     managed_by  = "terraform"
   }
 
-  depends_on = [
-    google_compute_network.vpc,
-    google_compute_subnetwork.subnet,
-  ]
+  # Remove dependency on custom VPC
+  # depends_on = [
+  #   google_compute_network.vpc,
+  #   google_compute_subnetwork.subnet,
+  # ]
 }
 
-# VPC Network
-resource "google_compute_network" "vpc" {
-  name                    = "diploma-vpc-${var.environment}"
-  auto_create_subnetworks = false
-  project                 = var.project
-}
+# VPC Network (commented out for free tier - using default)
+# resource "google_compute_network" "vpc" {
+#   name                    = "diploma-vpc-${var.environment}"
+#   auto_create_subnetworks = false
+#   project                 = var.project
+# }
 
-# Subnet
-resource "google_compute_subnetwork" "subnet" {
-  name          = "diploma-subnet-${var.environment}"
-  ip_cidr_range = var.environment == "prod" ? "10.0.0.0/16" : "10.${var.environment == "qa" ? 1 : 2}.0.0/16"
-  region        = var.region
-  network       = google_compute_network.vpc.name
-  project       = var.project
-
-  secondary_ip_range {
-    range_name    = "pods"
-    ip_cidr_range = var.environment == "prod" ? "172.16.0.0/14" : "172.${var.environment == "qa" ? 20 : 24}.0.0/14"
-  }
-
-  secondary_ip_range {
-    range_name    = "services"
-    ip_cidr_range = var.environment == "prod" ? "192.168.0.0/16" : "192.168.${var.environment == "qa" ? 1 : 2}.0/24"
-  }
-}
+# Subnet (commented out for free tier - using default)
+# resource "google_compute_subnetwork" "subnet" {
+#   name          = "diploma-subnet-${var.environment}"
+#   ip_cidr_range = var.environment == "prod" ? "10.0.0.0/16" : "10.${var.environment == "qa" ? 1 : 2}.0.0/16"
+#   region        = var.region
+#   network       = google_compute_network.vpc.name
+#   project       = var.project
+#
+#   secondary_ip_range {
+#     range_name    = "pods"
+#     ip_cidr_range = var.environment == "prod" ? "172.16.0.0/14" : "172.${var.environment == "qa" ? 20 : 24}.0.0/14"
+#   }
+#
+#   secondary_ip_range {
+#     range_name    = "services"
+#     ip_cidr_range = var.environment == "prod" ? "192.168.0.0/16" : "192.168.${var.environment == "qa" ? 1 : 2}.0/24"
+#   }
+# }
 
 # Node pool with different configurations per environment
 resource "google_container_node_pool" "primary_nodes" {
@@ -124,10 +97,10 @@ resource "google_container_node_pool" "primary_nodes" {
       "https://www.googleapis.com/auth/cloud-platform"
     ]
 
-    # Workload Identity
-    workload_metadata_config {
-      mode = "GKE_METADATA"
-    }
+    # Workload Identity disabled for free tier
+    # workload_metadata_config {
+    #   mode = "GKE_METADATA"
+    # }
 
     # Resource labels
     labels = {
@@ -252,7 +225,7 @@ resource "google_storage_bucket_iam_member" "static_content_public" {
 # Firewall rules
 resource "google_compute_firewall" "allow_http" {
   name    = "allow-http-${var.environment}"
-  network = google_compute_network.vpc.name
+  network = "default"
   project = var.project
 
   allow {

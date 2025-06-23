@@ -21,18 +21,18 @@ output "cluster_ca_certificate" {
 }
 
 output "vpc_network" {
-  description = "VPC network name"
-  value       = google_compute_network.vpc.name
+  description = "VPC network name (using default)"
+  value       = "default"
 }
 
 output "vpc_subnet" {
-  description = "VPC subnet name"
-  value       = google_compute_subnetwork.subnet.name
+  description = "VPC subnet name (using default)"
+  value       = "default"
 }
 
 output "subnet_cidr" {
-  description = "Subnet CIDR range"
-  value       = google_compute_subnetwork.subnet.ip_cidr_range
+  description = "Subnet CIDR range (using default)"
+  value       = "10.128.0.0/20"
 }
 
 output "static_bucket_name" {
