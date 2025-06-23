@@ -40,7 +40,7 @@ variable "machine_type" {
 
 variable "disk_size" {
   type        = number
-  default     = 10
+  default     = 15
   description = "Disk size in GB for cluster nodes"
 }
 
