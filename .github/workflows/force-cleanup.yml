@@ -1,0 +1,88 @@
+name: 🗑️ Force Cleanup GCP Resources
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "DELETE" to confirm resource deletion'
+        required: true
+        default: ''
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+jobs:
+  force-cleanup:
+    name: 🗑️ Force Delete All Resources
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'DELETE'
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        
+      - name: Force delete firewall rules
+        continue-on-error: true
+        run: |
+          echo "🔥 Deleting firewall rules..."
+          gcloud compute firewall-rules delete allow-http-dev --quiet || true
+          gcloud compute firewall-rules delete allow-http-qa --quiet || true
+          gcloud compute firewall-rules delete allow-http-prod --quiet || true
+          
+      - name: Force delete clusters
+        continue-on-error: true
+        run: |
+          echo "🔥 Deleting GKE clusters..."
+          gcloud container clusters delete diploma-cluster-dev --region=europe-west3 --quiet || true
+          gcloud container clusters delete diploma-cluster-dev --region=europe-west1 --quiet || true
+          gcloud container clusters delete diploma-cluster-qa --region=europe-west1 --quiet || true
+          gcloud container clusters delete diploma-cluster-prod --region=europe-west1 --quiet || true
+          
+      - name: Force delete VPC networks
+        continue-on-error: true
+        run: |
+          echo "🔥 Deleting VPC networks..."
+          gcloud compute networks delete diploma-vpc-dev --quiet || true
+          gcloud compute networks delete diploma-vpc-qa --quiet || true
+          gcloud compute networks delete diploma-vpc-prod --quiet || true
+          
+      - name: Force delete all disks
+        continue-on-error: true
+        run: |
+          echo "🔥 Deleting all disks..."
+          # Get all disks and delete them
+          gcloud compute disks list --format="value(name,zone)" | while read disk zone; do
+            if [[ $disk == *"diploma"* ]] || [[ $disk == *"gke"* ]]; then
+              echo "Deleting disk: $disk in zone: $zone"
+              gcloud compute disks delete "$disk" --zone="$zone" --quiet || true
+            fi
+          done
+          
+      - name: Force delete container images
+        continue-on-error: true
+        run: |
+          echo "🔥 Deleting container images..."
+          # Delete all images in Container Registry
+          gcloud container images list --format='value(name)' | xargs -I {} gcloud container images delete {} --force-delete-tags --quiet || true
+          
+      - name: Force delete storage buckets
+        continue-on-error: true
+        run: |
+          echo "🔥 Deleting storage buckets..."
+          gsutil ls | grep diploma | xargs -I {} gsutil rm -r {} || true
+          
+      - name: Check remaining resources
+        run: |
+          echo "📊 Remaining resources:"
+          echo "Clusters:"
+          gcloud container clusters list || true
+          echo "Disks:"
+          gcloud compute disks list || true
+          echo "Networks:"
+          gcloud compute networks list || true
+          echo "Firewall rules:"
+          gcloud compute firewall-rules list | grep diploma || true 
