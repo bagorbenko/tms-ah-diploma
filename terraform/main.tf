@@ -174,7 +174,7 @@ resource "google_container_node_pool" "primary_nodes" {
 # Cloud Storage bucket for static content
 resource "google_storage_bucket" "static_content" {
   name          = "diploma-static-${var.environment}-${random_id.bucket_suffix.hex}"
-  location      = var.region
+  location      = "EUROPE-WEST1"
   project       = var.project
   force_destroy = var.environment != "prod"
 
