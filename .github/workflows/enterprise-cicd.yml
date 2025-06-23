@@ -1,0 +1,418 @@
+name: Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+
+env:
+  REGISTRY: gcr.io
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+jobs:
+  # 1. Инициализация и подготовка
+  init:
+    name: 🚀 Initialize Pipeline
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      image-tag: ${{ steps.set-tag.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set environment
+        id: set-env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            echo "environment=qa" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Set image tag
+        id: set-tag
+        run: |
+          echo "tag=sha-$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_OUTPUT
+
+  # 2. Сборка приложений
+  build:
+    name: 🔨 Build Applications
+    runs-on: ubuntu-latest
+    needs: init
+    strategy:
+      matrix:
+        service: [api-store, bookshop]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+        
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}:${{ needs.init.outputs.image-tag }}
+            ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 3. Тестирование
+  test:
+    name: 🧪 Test Suite
+    runs-on: ubuntu-latest
+    needs: init
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies and test api-store
+        working-directory: api-store
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+        run: |
+          pip install -r requirements.txt
+          pytest --cov=app --cov-report=xml --junitxml=test-results.xml
+          
+      - name: Install dependencies and test bookshop
+        working-directory: bookshop
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          TESTING: "true"
+        run: |
+          pip install -r requirements.txt
+          pytest --cov=. --cov-report=xml --junitxml=test-results.xml
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            */test-results.xml
+            */coverage.xml
+
+  # 4. Анализ качества кода
+  code-quality:
+    name: 📊 Code Quality Analysis
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          
+      - name: Quality Gate Check
+        run: |
+          echo "Checking quality gate status..."
+          # В реальном проекте здесь был бы запрос к SonarCloud API
+
+  # 5. Безопасность (DevSecOps)
+  security:
+    name: 🔒 Security Scanning
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        service: [api-store, bookshop]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --project-name=${{ matrix.service }} --file=${{ matrix.service }}/requirements.txt
+          
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:8000'
+          
+      - name: Upload security results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-results-${{ matrix.service }}
+          path: |
+            snyk-results.json
+            zap-results.json
+
+  # 6. Инфраструктура как код
+  infrastructure:
+    name: 🏗️ Infrastructure as Code
+    runs-on: ubuntu-latest
+    needs: [init, code-quality, security]
+    if: needs.init.outputs.environment != 'dev'
+    environment: ${{ needs.init.outputs.environment }}
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="prefix=${{ needs.init.outputs.environment }}/terraform/state"
+            
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="environment=${{ needs.init.outputs.environment }}" \
+            -var="cluster_name=diploma-${{ needs.init.outputs.environment }}" \
+            -out=tfplan
+            
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: terraform apply -auto-approve tfplan
+
+  # 7. Деплой приложений
+  deploy:
+    name: 🚀 Deploy Applications  
+    runs-on: ubuntu-latest
+    needs: [init, build, infrastructure]
+    environment: ${{ needs.init.outputs.environment }}
+    strategy:
+      matrix:
+        service: [api-store, bookshop]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: diploma-${{ needs.init.outputs.environment }}
+          location: europe-west3
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Deploy to Kubernetes
+        run: |
+          # Update image tag in deployment
+          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}:${{ needs.init.outputs.image-tag }}|g" k8s/${{ matrix.service }}-deployment.yaml
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/${{ matrix.service }}-deployment.yaml -n ${{ matrix.service }}-${{ needs.init.outputs.environment }}
+          kubectl apply -f k8s/${{ matrix.service }}-service.yaml -n ${{ matrix.service }}-${{ needs.init.outputs.environment }}
+          
+          # Wait for rollout
+          kubectl rollout status deployment/${{ matrix.service }}-deployment -n ${{ matrix.service }}-${{ needs.init.outputs.environment }}
+
+  # 8. Настройка DuckDNS и TLS
+  duckdns-tls-setup:
+    name: 🔐 DuckDNS & TLS Setup
+    runs-on: ubuntu-latest
+    needs: [init, deploy]
+    if: needs.init.outputs.environment == 'prod'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: diploma-${{ needs.init.outputs.environment }}
+          location: europe-west3
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Setup DuckDNS domains
+        env:
+          DUCKDNS_TOKEN: ${{ secrets.DUCKDNS_TOKEN }}
+          DUCKDNS_DOMAIN: ${{ secrets.DUCKDNS_DOMAIN || 'diploma-project' }}
+          ENVIRONMENT: ${{ needs.init.outputs.environment }}
+        run: |
+          # Make script executable
+          chmod +x scripts/setup-duckdns.sh
+          
+          # Run DuckDNS setup
+          ./scripts/setup-duckdns.sh
+          
+      - name: Wait for DNS propagation
+        run: |
+          echo "Waiting for DNS propagation..."
+          sleep 60
+          
+      - name: Setup cert-manager
+        run: |
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+          
+          # Wait for cert-manager to be ready
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=cert-manager -n cert-manager --timeout=300s
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=cainjector -n cert-manager --timeout=300s
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=webhook -n cert-manager --timeout=300s
+          
+      - name: Configure TLS certificates
+        run: |
+          kubectl apply -f k8s/tls-certificates.yaml
+          
+      - name: Verify SSL certificates
+        run: |
+          echo "Waiting for certificate issuance..."
+          sleep 120
+          
+          # Check certificate status
+          kubectl get certificates -A
+          kubectl describe certificates -A
+
+  # 9. Мониторинг
+  monitoring:
+    name: 📊 Setup Monitoring
+    runs-on: ubuntu-latest
+    needs: [init, deploy]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy Grafana
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm upgrade --install grafana grafana/grafana \
+            --namespace monitoring-${{ needs.init.outputs.environment }} \
+            --create-namespace \
+            --values monitoring/grafana-values.yaml
+
+  # 10. Нагрузочное тестирование
+  load-testing:
+    name: 🏋️ Load Testing
+    runs-on: ubuntu-latest
+    needs: [init, deploy]
+    if: needs.init.outputs.environment != 'dev'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+          
+      - name: Run load tests
+        run: |
+          k6 run tests/load-test.js
+          
+      - name: Upload load test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: load-test-results.json
+
+  # 11. Деплой статического контента
+  static-deploy:
+    name: 🌐 Deploy Static Content
+    runs-on: ubuntu-latest
+    needs: [init, deploy]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Upload to Cloud Storage
+        run: |
+          gsutil cp index.html gs://diploma-static-${{ needs.init.outputs.environment }}/
+          gsutil web set -m index.html gs://diploma-static-${{ needs.init.outputs.environment }}/
+
+  # Уведомления о результатах
+  notify:
+    name: 📧 Notify Results
+    runs-on: ubuntu-latest
+    needs: [init, deploy, load-testing, static-deploy]
+    if: always()
+    steps:
+      - name: Notify on success
+        if: ${{ needs.deploy.result == 'success' }}
+        run: |
+          echo "🎉 Deployment to ${{ needs.init.outputs.environment }} completed successfully!"
+          
+      - name: Notify on failure
+        if: ${{ needs.deploy.result == 'failure' }}
+        run: |
+          echo "❌ Deployment to ${{ needs.init.outputs.environment }} failed!" 

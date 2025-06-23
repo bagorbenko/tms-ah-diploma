@@ -1,64 +1,280 @@
-resource "google_container_cluster" "primary" {
-  name               = var.cluster_name
-  location           = var.region
-  initial_node_count = 1
+resource "google_container_cluster" "diploma_cluster" {
+  name     = "${var.cluster_name}-${var.environment}"
+  location = var.region
+  project  = var.project
 
+  # We can't create a cluster with no node pool defined, but we want to only use
+  # separately managed node pools. So we create the smallest possible default
+  # node pool and immediately delete it.
   remove_default_node_pool = true
+  initial_node_count       = 1
 
-  node_config {
-    machine_type = var.machine_type
-    disk_size_gb = var.disk_size
-    disk_type    = "pd-standard"
-    
-    image_type = "UBUNTU_CONTAINERD"
-    
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform",
-    ]
-    
-    labels = {
-      environment = "diploma"
-      cost_center = "education"
+  # Network settings
+  network    = google_compute_network.vpc.name
+  subnetwork = google_compute_subnetwork.subnet.name
+
+  # IP allocation policy for VPC-native networking
+  ip_allocation_policy {
+    cluster_secondary_range_name  = "pods"
+    services_secondary_range_name = "services"
+  }
+
+  # Master authorized networks (for production security)
+  dynamic "master_authorized_networks_config" {
+    for_each = var.environment == "prod" ? [1] : []
+    content {
+      dynamic "cidr_blocks" {
+        for_each = var.authorized_networks
+        content {
+          cidr_block   = cidr_blocks.value.cidr_block
+          display_name = cidr_blocks.value.display_name
+        }
+      }
     }
+  }
+
+  # Network policy
+  network_policy {
+    enabled = var.enable_network_policy
+  }
+
+  # Binary authorization (for prod)
+  dynamic "binary_authorization" {
+    for_each = var.environment == "prod" ? [1] : []
+    content {
+      evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
+    }
+  }
+
+  # Workload Identity
+  workload_identity_config {
+    workload_pool = "${var.project}.svc.id.goog"
+  }
+
+  # Monitoring and logging
+  logging_service    = var.enable_monitoring ? "logging.googleapis.com/kubernetes" : "none"
+  monitoring_service = var.enable_monitoring ? "monitoring.googleapis.com/kubernetes" : "none"
+
+  # Resource labels
+  resource_labels = {
+    environment = var.environment
+    project     = "diploma"
+    managed_by  = "terraform"
+  }
+
+  depends_on = [
+    google_compute_network.vpc,
+    google_compute_subnetwork.subnet,
+  ]
+}
+
+# VPC Network
+resource "google_compute_network" "vpc" {
+  name                    = "diploma-vpc-${var.environment}"
+  auto_create_subnetworks = false
+  project                 = var.project
+}
+
+# Subnet
+resource "google_compute_subnetwork" "subnet" {
+  name          = "diploma-subnet-${var.environment}"
+  ip_cidr_range = var.environment == "prod" ? "10.0.0.0/16" : "10.${var.environment == "qa" ? 1 : 2}.0.0/16"
+  region        = var.region
+  network       = google_compute_network.vpc.name
+  project       = var.project
+
+  secondary_ip_range {
+    range_name    = "pods"
+    ip_cidr_range = var.environment == "prod" ? "172.16.0.0/14" : "172.${var.environment == "qa" ? 20 : 24}.0.0/14"
+  }
+
+  secondary_ip_range {
+    range_name    = "services"
+    ip_cidr_range = var.environment == "prod" ? "192.168.0.0/16" : "192.168.${var.environment == "qa" ? 1 : 2}.0/24"
   }
 }
 
+# Node pool with different configurations per environment
 resource "google_container_node_pool" "primary_nodes" {
-  name       = "${var.cluster_name}-node-pool"
-  cluster    = google_container_cluster.primary.name
+  name       = "${var.cluster_name}-nodes-${var.environment}"
   location   = var.region
-  node_count = var.node_count
+  cluster    = google_container_cluster.diploma_cluster.name
+  project    = var.project
+
+  # Node count based on environment
+  node_count = var.environment == "prod" ? 2 : 1
+
+  # Autoscaling for production
+  dynamic "autoscaling" {
+    for_each = var.environment == "prod" ? [1] : []
+    content {
+      min_node_count = var.min_node_count
+      max_node_count = var.max_node_count
+    }
+  }
 
   node_config {
-    machine_type = var.machine_type
+    preemptible  = var.environment != "prod"
+    machine_type = var.environment == "prod" ? "e2-medium" : var.machine_type
     disk_size_gb = var.disk_size
     disk_type    = "pd-standard"
-    
-    image_type = "UBUNTU_CONTAINERD"
-    
+
+    # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
+    service_account = google_service_account.gke_service_account.email
     oauth_scopes = [
-      "https://www.googleapis.com/auth/devstorage.read_only",
-      "https://www.googleapis.com/auth/logging.write",
-      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/cloud-platform"
     ]
-    
-    labels = {
-      environment = "diploma"
-      cost_center = "education"
+
+    # Workload Identity
+    workload_metadata_config {
+      mode = "GKE_METADATA"
     }
-    
+
+    # Resource labels
+    labels = {
+      environment = var.environment
+      node_pool   = "primary"
+    }
+
+    # Node taints for production
+    dynamic "taint" {
+      for_each = var.environment == "prod" ? [
+        {
+          key    = "environment"
+          value  = "production"
+          effect = "NO_SCHEDULE"
+        }
+      ] : []
+      content {
+        key    = taint.value.key
+        value  = taint.value.value
+        effect = taint.value.effect
+      }
+    }
+
     metadata = {
       disable-legacy-endpoints = "true"
     }
   }
 
-  autoscaling {
-    min_node_count = 1
-    max_node_count = 2
-  }
-
+  # Management settings
   management {
     auto_repair  = true
-    auto_upgrade = true
+    auto_upgrade = var.environment == "prod" ? false : true
+  }
+
+  # Upgrade settings for production
+  dynamic "upgrade_settings" {
+    for_each = var.environment == "prod" ? [1] : []
+    content {
+      max_surge       = 1
+      max_unavailable = 0
+    }
+  }
+
+  depends_on = [
+    google_container_cluster.diploma_cluster,
+    google_service_account.gke_service_account,
+  ]
+}
+
+# Service Account for GKE nodes
+resource "google_service_account" "gke_service_account" {
+  account_id   = "gke-service-account-${var.environment}"
+  display_name = "GKE Service Account for ${var.environment}"
+  project      = var.project
+}
+
+# IAM roles for the service account
+resource "google_project_iam_member" "gke_service_account_roles" {
+  for_each = toset([
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+    "roles/monitoring.viewer",
+    "roles/stackdriver.resourceMetadata.writer",
+    "roles/storage.objectViewer",
+  ])
+
+  project = var.project
+  role    = each.key
+  member  = "serviceAccount:${google_service_account.gke_service_account.email}"
+}
+
+# Cloud Storage bucket for static content
+resource "google_storage_bucket" "static_content" {
+  name          = "diploma-static-${var.environment}-${random_id.bucket_suffix.hex}"
+  location      = var.region
+  project       = var.project
+  force_destroy = var.environment != "prod"
+
+  website {
+    main_page_suffix = "index.html"
+    not_found_page   = "404.html"
+  }
+
+  # CORS settings for web access
+  cors {
+    origin          = ["*"]
+    method          = ["GET", "HEAD"]
+    response_header = ["*"]
+    max_age_seconds = 3600
+  }
+
+  # Lifecycle rules for non-production environments
+  dynamic "lifecycle_rule" {
+    for_each = var.environment != "prod" ? [1] : []
+    content {
+      condition {
+        age = 30
+      }
+      action {
+        type = "Delete"
+      }
+    }
+  }
+
+  labels = {
+    environment = var.environment
+    project     = "diploma"
+  }
+}
+
+# Random ID for bucket naming
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
+}
+
+# Make bucket public for static hosting
+resource "google_storage_bucket_iam_member" "static_content_public" {
+  bucket = google_storage_bucket.static_content.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+
+# Firewall rules
+resource "google_compute_firewall" "allow_http" {
+  name    = "allow-http-${var.environment}"
+  network = google_compute_network.vpc.name
+  project = var.project
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443", "8080", "3000"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["http-server"]
+}
+
+# Cloud DNS zone (for production)
+resource "google_dns_managed_zone" "diploma_zone" {
+  count       = var.environment == "prod" ? 1 : 0
+  name        = "diploma-zone"
+  dns_name    = "diploma-project.com."
+  description = "DNS zone for diploma project"
+  project     = var.project
+
+  labels = {
+    environment = var.environment
   }
 }

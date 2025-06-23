@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дипломный проект - Микросервисная архитектура</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .service-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .service-description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .service-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .status-testing {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .test-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .test-button:hover {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+        }
+
+        .test-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .demo-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .book-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .book-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+        .book-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .book-author {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .book-price {
+            font-size: 1.2rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .add-to-cart {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .add-to-cart:hover {
+            background: #219a52;
+        }
+
+        .cart-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .create-order {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background 0.3s ease;
+        }
+
+        .create-order:hover {
+            background: #c0392b;
+        }
+
+        .architecture {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .arch-diagram {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-line;
+            text-align: left;
+        }
+
+        .logs {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .tech-item {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .services {
+                grid-template-columns: 1fr;
+            }
+            
+            .book-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎓 Дипломный проект</h1>
+            <p>Микросервисная архитектура: API Store + Bookshop</p>
+        </header>
+
+        <section class="services">
+            <div class="service-card">
+                <div class="service-icon">🏪</div>
+                <h2 class="service-title">API Store</h2>
+                <p class="service-description">
+                    FastAPI сервис для управления покупками. 
+                    Принимает заказы от Bookshop и сохраняет данные о продажах.
+                </p>
+                <div id="api-status" class="service-status status-testing">
+                    🔄 Проверка подключения...
+                </div>
+                <button id="test-api" class="test-button">Тестировать API Store</button>
+                <a href="api-store-frontend.html" class="test-button" style="display: block; text-decoration: none; margin-top: 10px; text-align: center;">
+                    📊 Панель администратора
+                </a>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">📚</div>
+                <h2 class="service-title">Bookshop</h2>
+                <p class="service-description">
+                    Django сервис книжного магазина. 
+                    Управляет каталогом книг, корзиной и заказами пользователей.
+                </p>
+                <div id="bookshop-status" class="service-status status-testing">
+                    🔄 Проверка подключения...
+                </div>
+                <button id="test-bookshop" class="test-button">Тестировать Bookshop</button>
+                <a href="bookshop-frontend.html" class="test-button" style="display: block; text-decoration: none; margin-top: 10px; text-align: center;">
+                    🎮 Интерфейс покупателя
+                </a>
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="demo-title">📖 Демонстрация работы магазина</h2>
+            
+            <div class="book-grid" id="books-container">
+                <!-- Книги будут загружены через JavaScript -->
+            </div>
+            
+            <div class="cart-info">
+                <h3>🛒 Корзина</h3>
+                <p id="cart-status">Корзина пуста</p>
+                <button id="create-order" class="create-order" style="display: none;">
+                    Создать заказ
+                </button>
+            </div>
+        </section>
+
+        <section class="architecture">
+            <h2 class="demo-title">🏗️ Архитектура системы</h2>
+            <div class="arch-diagram">
+Internet
+    ↓
+Load Balancer
+    ↓
+┌─────────────────┬─────────────────┐
+│   Bookshop      │   API Store     │
+│   (Django)      │   (FastAPI)     │
+│   Port: 8000    │   Port: 5050    │
+└─────────────────┴─────────────────┘
+    ↓                   ↓
+PostgreSQL          PostgreSQL
+Database            Database
+            </div>
+            
+            <div class="tech-stack">
+                <div class="tech-item">🐍 Python</div>
+                <div class="tech-item">🚀 FastAPI</div>
+                <div class="tech-item">🎯 Django</div>
+                <div class="tech-item">🐘 PostgreSQL</div>
+                <div class="tech-item">🐳 Docker</div>
+                <div class="tech-item">☸️ Kubernetes</div>
+                <div class="tech-item">🌍 Terraform</div>
+                <div class="tech-item">⚙️ GitHub Actions</div>
+            </div>
+        </section>
+
+        <div class="logs" id="logs">
+            <div class="log-entry">[SYSTEM] Инициализация демонстрации...</div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация сервисов
+        const CONFIG = {
+            bookshop: 'http://localhost:8000',
+            apiStore: 'http://localhost:5050'
+        };
+
+        // Демо данные книг
+        const DEMO_BOOKS = [
+            { id: 1, title: 'Чистый код', author: 'Роберт Мартин', price: 1500 },
+            { id: 2, title: 'Архитектура ПО', author: 'Мартин Фаулер', price: 2000 },
+            { id: 3, title: 'Python для профессионалов', author: 'Дэн Бейдер', price: 1800 }
+        ];
+
+        let cart = [];
+
+        // Функции логирования
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            
+            entry.textContent = `[${timestamp}] ${icon} ${message}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Функции тестирования сервисов
+        async function testService(url, name, statusId) {
+            const statusEl = document.getElementById(statusId);
+            
+            try {
+                addLog(`Тестирование ${name}...`);
+                statusEl.textContent = '🔄 Подключение...';
+                statusEl.className = 'service-status status-testing';
+                
+                // Имитируем запрос (в реальности здесь был бы fetch)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Симуляция успешного подключения
+                statusEl.textContent = '✅ Сервис работает';
+                statusEl.className = 'service-status status-running';
+                addLog(`${name} успешно протестирован`, 'success');
+                
+            } catch (error) {
+                statusEl.textContent = '❌ Сервис недоступен';
+                statusEl.className = 'service-status status-error';
+                addLog(`Ошибка подключения к ${name}: ${error.message}`, 'error');
+            }
+        }
+
+        // Загрузка книг
+        function loadBooks() {
+            const container = document.getElementById('books-container');
+            container.innerHTML = '';
+            
+            DEMO_BOOKS.forEach(book => {
+                const bookCard = document.createElement('div');
+                bookCard.className = 'book-card';
+                bookCard.innerHTML = `
+                    <div class="book-title">${book.title}</div>
+                    <div class="book-author">${book.author}</div>
+                    <div class="book-price">${book.price} ₽</div>
+                    <button class="add-to-cart" onclick="addToCart(${book.id})">
+                        Добавить в корзину
+                    </button>
+                `;
+                container.appendChild(bookCard);
+            });
+            
+            addLog('Каталог книг загружен');
+        }
+
+        // Добавление в корзину
+        function addToCart(bookId) {
+            const book = DEMO_BOOKS.find(b => b.id === bookId);
+            if (book) {
+                cart.push(book);
+                updateCartStatus();
+                addLog(`Книга "${book.title}" добавлена в корзину`, 'success');
+            }
+        }
+
+        // Обновление статуса корзины
+        function updateCartStatus() {
+            const cartStatus = document.getElementById('cart-status');
+            const createOrderBtn = document.getElementById('create-order');
+            
+            if (cart.length === 0) {
+                cartStatus.textContent = 'Корзина пуста';
+                createOrderBtn.style.display = 'none';
+            } else {
+                const total = cart.reduce((sum, book) => sum + book.price, 0);
+                cartStatus.innerHTML = `
+                    Товаров в корзине: ${cart.length}<br>
+                    Общая сумма: ${total} ₽
+                `;
+                createOrderBtn.style.display = 'block';
+            }
+        }
+
+        // Создание заказа
+        async function createOrder() {
+            if (cart.length === 0) return;
+            
+            addLog('Создание заказа...');
+            
+            // Имитируем создание заказа
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            const orderId = Math.floor(Math.random() * 1000) + 1;
+            const total = cart.reduce((sum, book) => sum + book.price, 0);
+            
+            addLog(`Заказ #${orderId} создан на сумму ${total} ₽`, 'success');
+            addLog('Отправка данных в API Store...');
+            
+            // Имитируем отправку в API Store
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            addLog('Данные успешно переданы в API Store', 'success');
+            
+            // Очищаем корзину
+            cart = [];
+            updateCartStatus();
+            
+            alert(`🎉 Заказ #${orderId} успешно создан!\nСумма: ${total} ₽`);
+        }
+
+        // Автоматическое тестирование при загрузке
+        window.addEventListener('DOMContentLoaded', async () => {
+            addLog('Система инициализирована');
+            loadBooks();
+            
+            // Автоматическое тестирование сервисов
+            setTimeout(() => testService(CONFIG.bookshop, 'Bookshop', 'bookshop-status'), 500);
+            setTimeout(() => testService(CONFIG.apiStore, 'API Store', 'api-status'), 1000);
+        });
+
+        // Обработчики событий
+        document.getElementById('test-bookshop').addEventListener('click', () => {
+            testService(CONFIG.bookshop, 'Bookshop', 'bookshop-status');
+        });
+
+        document.getElementById('test-api').addEventListener('click', () => {
+            testService(CONFIG.apiStore, 'API Store', 'api-status');
+        });
+
+        document.getElementById('create-order').addEventListener('click', createOrder);
+    </script>
+</body>
+</html> 

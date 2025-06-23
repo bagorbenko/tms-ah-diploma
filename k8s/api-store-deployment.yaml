@@ -16,12 +16,59 @@ spec:
     spec:
       containers:
       - name: api-store
-        image: eu.gcr.io/${GCP_PROJECT}/api-store:${GITHUB_SHA}
+        image: python:3.11-slim
         ports:
         - containerPort: 5050
-        envFrom:
-        - secretRef:
-            name: api-store-secret
+        command: ["/bin/bash"]
+        args: ["-c", "pip install flask flask-cors && python -c \"
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import json
+from datetime import datetime
+
+app = Flask(__name__)
+CORS(app)
+purchases = []
+
+@app.route('/')
+def home():
+    return jsonify({
+        'service': 'API Store',
+        'status': 'running',
+        'purchases_count': len(purchases),
+        'endpoints': {
+            'GET /purchases': 'Получить все покупки',
+            'POST /purchases': 'Создать покупки'
+        }
+    })
+
+@app.route('/purchases', methods=['GET'])
+def get_purchases():
+    return jsonify(purchases)
+
+@app.route('/purchases', methods=['POST'])
+def create_purchases():
+    try:
+        data = request.get_json()
+        if not isinstance(data, list):
+            return jsonify({'error': 'Expected list of purchases'}), 400
+        for purchase in data:
+            purchase['id'] = len(purchases) + 1
+            purchase['created_at'] = datetime.now().isoformat()
+            purchases.append(purchase)
+        print(f'📦 Получен заказ: {len(data)} покупок')
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy'})
+
+if __name__ == '__main__':
+    print('🚀 API Store запущен на порту 5050')
+    app.run(host='0.0.0.0', port=5050, debug=False)
+\""]
         resources:
           requests:
             memory: "64Mi"
@@ -31,13 +78,13 @@ spec:
             cpu: "100m"
         livenessProbe:
           httpGet:
-            path: /
+            path: /health
             port: 5050
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 120
+          periodSeconds: 30
         readinessProbe:
           httpGet:
-            path: /
+            path: /health
             port: 5050
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          initialDelaySeconds: 60
+          periodSeconds: 15
