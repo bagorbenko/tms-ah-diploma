@@ -34,13 +34,13 @@ variable "node_count" {
 
 variable "machine_type" {
   type        = string
-  default     = "e2-small"
+  default     = "e2-micro"
   description = "Machine type for cluster nodes"
 }
 
 variable "disk_size" {
   type        = number
-  default     = 15
+  default     = 10
   description = "Disk size in GB for cluster nodes"
 }
 
