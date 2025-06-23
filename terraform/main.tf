@@ -119,8 +119,7 @@ resource "google_container_node_pool" "primary_nodes" {
     disk_size_gb = var.disk_size
     disk_type    = "pd-standard"
 
-    # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
-    service_account = google_service_account.gke_service_account.email
+    # Use default service account for free tier
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
@@ -174,31 +173,30 @@ resource "google_container_node_pool" "primary_nodes" {
 
   depends_on = [
     google_container_cluster.diploma_cluster,
-    google_service_account.gke_service_account,
   ]
 }
 
-# Service Account for GKE nodes
-resource "google_service_account" "gke_service_account" {
-  account_id   = "gke-service-account-${var.environment}"
-  display_name = "GKE Service Account for ${var.environment}"
-  project      = var.project
-}
+# Service Account for GKE nodes (commented out for free tier)
+# resource "google_service_account" "gke_service_account" {
+#   account_id   = "gke-service-account-${var.environment}"
+#   display_name = "GKE Service Account for ${var.environment}"
+#   project      = var.project
+# }
 
-# IAM roles for the service account
-resource "google_project_iam_member" "gke_service_account_roles" {
-  for_each = toset([
-    "roles/logging.logWriter",
-    "roles/monitoring.metricWriter",
-    "roles/monitoring.viewer",
-    "roles/stackdriver.resourceMetadata.writer",
-    "roles/storage.objectViewer",
-  ])
-
-  project = var.project
-  role    = each.key
-  member  = "serviceAccount:${google_service_account.gke_service_account.email}"
-}
+# IAM roles for the service account (commented out for free tier)
+# resource "google_project_iam_member" "gke_service_account_roles" {
+#   for_each = toset([
+#     "roles/logging.logWriter",
+#     "roles/monitoring.metricWriter",
+#     "roles/monitoring.viewer",
+#     "roles/stackdriver.resourceMetadata.writer",
+#     "roles/storage.objectViewer",
+#   ])
+#
+#   project = var.project
+#   role    = each.key
+#   member  = "serviceAccount:${google_service_account.gke_service_account.email}"
+# }
 
 # Cloud Storage bucket for static content
 resource "google_storage_bucket" "static_content" {

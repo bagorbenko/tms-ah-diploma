@@ -52,7 +52,7 @@ variable "min_node_count" {
 
 variable "max_node_count" {
   type        = number
-  default     = 3
+  default     = 2
   description = "Maximum number of nodes in autoscaling group"
 }
 
