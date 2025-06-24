@@ -32,11 +32,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# Add some debug info
-print(f"🔧 Django starting with DEBUG={DEBUG}")
-print(f"🔧 ALLOWED_HOSTS={ALLOWED_HOSTS}")
-print(f"🔧 Database engine: {DATABASES['default']['ENGINE']}")
-
 
 # Application definition
 
@@ -113,6 +108,11 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
+# Add some debug info after DATABASES is defined
+print(f"🔧 Django starting with DEBUG={DEBUG}")
+print(f"🔧 ALLOWED_HOSTS={ALLOWED_HOSTS}")
+print(f"🔧 Database engine: {DATABASES['default']['ENGINE']}")
 
 # DATABASES = {
 #     "default": {
