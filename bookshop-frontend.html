@@ -319,6 +319,110 @@
             font-size: 3rem;
             margin-bottom: 15px;
         }
+
+        /* Admin Panel Styles */
+        .admin-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .admin-tab {
+            flex: 1;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .admin-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .admin-tab:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .admin-tab-content {
+            display: none;
+        }
+
+        .admin-tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .admin-form {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -342,6 +446,7 @@
             <button class="tab active" onclick="showTab('books')">📖 Каталог книг</button>
             <button class="tab" onclick="showTab('cart')">🛒 Корзина (<span id="cart-count">0</span>)</button>
             <button class="tab" onclick="showTab('orders')">📋 Мои заказы</button>
+            <button class="tab" onclick="showTab('admin')">⚙️ Управление</button>
         </div>
 
         <div id="books" class="tab-content active">
@@ -370,14 +475,126 @@
                 <!-- Orders will be loaded here -->
             </div>
         </div>
+
+        <div id="admin" class="tab-content">
+            <h2>⚙️ Управление каталогом</h2>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="showAdminTab('create-book')">➕ Добавить книгу</button>
+                <button class="admin-tab" onclick="showAdminTab('create-author')">👤 Добавить автора</button>
+                <button class="admin-tab" onclick="showAdminTab('create-category')">📂 Добавить категорию</button>
+            </div>
+
+            <div id="create-book" class="admin-tab-content active">
+                <h3>➕ Добавить новую книгу</h3>
+                <form id="create-book-form" class="admin-form">
+                    <div class="form-group">
+                        <label for="book-title">Название книги:</label>
+                        <input type="text" id="book-title" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="book-author">Автор:</label>
+                        <select id="book-author" name="author_id" required>
+                            <option value="">Выберите автора</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="book-category">Категория:</label>
+                        <select id="book-category" name="category_id" required>
+                            <option value="">Выберите категорию</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="book-price">Цена (₽):</label>
+                            <input type="number" id="book-price" name="price" min="0" step="0.01" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="book-pages">Страниц:</label>
+                            <input type="number" id="book-pages" name="pages" min="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="book-stock">Количество:</label>
+                            <input type="number" id="book-stock" name="stock_quantity" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="book-isbn">ISBN:</label>
+                        <input type="text" id="book-isbn" name="isbn" placeholder="978-5-4461-0000-0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="book-description">Описание:</label>
+                        <textarea id="book-description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="book-publication-date">Дата публикации:</label>
+                        <input type="date" id="book-publication-date" name="publication_date">
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">📚 Создать книгу</button>
+                </form>
+            </div>
+
+            <div id="create-author" class="admin-tab-content">
+                <h3>👤 Добавить нового автора</h3>
+                <form id="create-author-form" class="admin-form">
+                    <div class="form-group">
+                        <label for="author-name">Имя автора:</label>
+                        <input type="text" id="author-name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="author-nationality">Национальность:</label>
+                        <input type="text" id="author-nationality" name="nationality">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="author-birth-date">Дата рождения:</label>
+                        <input type="date" id="author-birth-date" name="birth_date">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="author-bio">Биография:</label>
+                        <textarea id="author-bio" name="bio" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">👤 Создать автора</button>
+                </form>
+            </div>
+
+            <div id="create-category" class="admin-tab-content">
+                <h3>📂 Добавить новую категорию</h3>
+                <form id="create-category-form" class="admin-form">
+                    <div class="form-group">
+                        <label for="category-name">Название категории:</label>
+                        <input type="text" id="category-name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category-description">Описание:</label>
+                        <textarea id="category-description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">📂 Создать категорию</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="notification" id="notification"></div>
 
     <script>
         // Configuration
-        const BOOKSHOP_URL = 'https://bookshop-diploma-project.duckdns.org';
-        const API_STORE_URL = 'https://api-diploma-project.duckdns.org';
+        const BOOKSHOP_URL = 'http://35.241.155.121';
+        const API_STORE_URL = 'http://130.211.61.44';
         
         // Mock data for demonstration
         const mockBooks = [
@@ -800,6 +1017,231 @@
 
         // Periodic API status check
         setInterval(checkAPIStatus, 30000); // Check every 30 seconds
+
+        // === ADMIN PANEL FUNCTIONS ===
+
+        let authors = [];
+        let categories = [];
+
+        // Admin Tab Management
+        function showAdminTab(tabName) {
+            document.querySelectorAll('.admin-tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Load Authors and Categories for forms
+        async function loadAuthorsAndCategories() {
+            try {
+                // Load authors
+                const authorsResponse = await fetch(`${BOOKSHOP_URL}/api/authors`);
+                if (authorsResponse.ok) {
+                    const authorsData = await authorsResponse.json();
+                    authors = authorsData.authors || [];
+                } else {
+                    authors = [
+                        {id: 1, name: "Роберт Мартин"},
+                        {id: 2, name: "Мартин Фаулер"},
+                        {id: 3, name: "Дэн Бейдер"}
+                    ];
+                }
+
+                // Load categories
+                const categoriesResponse = await fetch(`${BOOKSHOP_URL}/api/categories`);
+                if (categoriesResponse.ok) {
+                    const categoriesData = await categoriesResponse.json();
+                    categories = categoriesData.categories || [];
+                } else {
+                    categories = [
+                        {id: 1, name: "Программирование"},
+                        {id: 2, name: "Архитектура ПО"},
+                        {id: 3, name: "Python"}
+                    ];
+                }
+
+                // Populate select options
+                populateAuthorSelect();
+                populateCategorySelect();
+
+            } catch (error) {
+                console.log('Using mock data for authors and categories');
+                authors = [
+                    {id: 1, name: "Роберт Мартин"},
+                    {id: 2, name: "Мартин Фаулер"},
+                    {id: 3, name: "Дэн Бейдер"}
+                ];
+                categories = [
+                    {id: 1, name: "Программирование"},
+                    {id: 2, name: "Архитектура ПО"},
+                    {id: 3, name: "Python"}
+                ];
+                populateAuthorSelect();
+                populateCategorySelect();
+            }
+        }
+
+        function populateAuthorSelect() {
+            const select = document.getElementById('book-author');
+            select.innerHTML = '<option value="">Выберите автора</option>';
+            authors.forEach(author => {
+                const option = document.createElement('option');
+                option.value = author.id;
+                option.textContent = author.name;
+                select.appendChild(option);
+            });
+        }
+
+        function populateCategorySelect() {
+            const select = document.getElementById('book-category');
+            select.innerHTML = '<option value="">Выберите категорию</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Create Book
+        document.getElementById('create-book-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const bookData = {
+                title: formData.get('title'),
+                author_id: parseInt(formData.get('author_id')),
+                category_id: parseInt(formData.get('category_id')),
+                price: parseFloat(formData.get('price')),
+                description: formData.get('description'),
+                isbn: formData.get('isbn'),
+                pages: parseInt(formData.get('pages')),
+                stock_quantity: parseInt(formData.get('stock_quantity')),
+                publication_date: formData.get('publication_date') || null
+            };
+
+            try {
+                const response = await fetch(`${BOOKSHOP_URL}/api/books`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bookData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(`✅ Книга "${bookData.title}" успешно создана!`);
+                    this.reset();
+                    loadBooks(); // Refresh books list
+                } else {
+                    const error = await response.json();
+                    showNotification(`❌ Ошибка: ${error.message || 'Не удалось создать книгу'}`, 'error');
+                }
+            } catch (error) {
+                showNotification('❌ Ошибка подключения к серверу', 'error');
+                console.error('Error creating book:', error);
+            }
+        });
+
+        // Create Author
+        document.getElementById('create-author-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const authorData = {
+                name: formData.get('name'),
+                nationality: formData.get('nationality'),
+                birth_date: formData.get('birth_date') || null,
+                bio: formData.get('bio')
+            };
+
+            try {
+                const response = await fetch(`${BOOKSHOP_URL}/api/authors`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(authorData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(`✅ Автор "${authorData.name}" успешно создан!`);
+                    this.reset();
+                    loadAuthorsAndCategories(); // Refresh authors list
+                } else {
+                    const error = await response.json();
+                    showNotification(`❌ Ошибка: ${error.message || 'Не удалось создать автора'}`, 'error');
+                }
+            } catch (error) {
+                showNotification('❌ Ошибка подключения к серверу', 'error');
+                console.error('Error creating author:', error);
+            }
+        });
+
+        // Create Category
+        document.getElementById('create-category-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const categoryData = {
+                name: formData.get('name'),
+                description: formData.get('description')
+            };
+
+            try {
+                const response = await fetch(`${BOOKSHOP_URL}/api/categories`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(categoryData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(`✅ Категория "${categoryData.name}" успешно создана!`);
+                    this.reset();
+                    loadAuthorsAndCategories(); // Refresh categories list
+                } else {
+                    const error = await response.json();
+                    showNotification(`❌ Ошибка: ${error.message || 'Не удалось создать категорию'}`, 'error');
+                }
+            } catch (error) {
+                showNotification('❌ Ошибка подключения к серверу', 'error');
+                console.error('Error creating category:', error);
+            }
+        });
+
+        // Load admin data when admin tab is shown
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Load data for specific tabs
+            if (tabName === 'cart') {
+                updateCartUI();
+            } else if (tabName === 'orders') {
+                loadOrders();
+            } else if (tabName === 'admin') {
+                loadAuthorsAndCategories();
+            }
+        }
     </script>
 </body>
 </html> 

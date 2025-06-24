@@ -2,8 +2,9 @@ import sqlalchemy
 import uvicorn
 from fastapi import Request, status, FastAPI, Depends
 from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import ValidationError, HTTPException
+from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.database import SessionLocal, create_tables

@@ -4,7 +4,7 @@ from app import models, schemas
 
 
 # def create_purchase(db: Session, item: schemas.Purchase):
-#     db_purchase = models.PurchaseModel(**item.dict())
+#     db_purchase = models.PurchaseModel(**item.model_dump())
 #     db.add(db_purchase)
 #     db.commit()
 #     db.refresh(db_purchase)
@@ -13,7 +13,7 @@ from app import models, schemas
 
 def create_many_purchases(db: Session, purchase_items: list[schemas.Purchase]):
     purchase_objs = [
-        models.PurchaseModel(**purchase_schema.dict())
+        models.PurchaseModel(**purchase_schema.model_dump())
         for purchase_schema in purchase_items
     ]
     db.bulk_save_objects(purchase_objs)

@@ -1,82 +1,105 @@
 version: "3.8"
 
 services:
-  # PostgreSQL для Django
+  # PostgreSQL для Flask Bookshop (опционально, по умолчанию SQLite)
   db_bookshop:
     image: postgres:15
     container_name: db_bookshop
     platform: linux/amd64
     restart: always
     environment:
-      POSTGRES_USER: aliquser
-      POSTGRES_PASSWORD: dbpass
+      POSTGRES_USER: bookshop_user
+      POSTGRES_PASSWORD: bookshop_pass
       POSTGRES_DB: bookshop
     volumes:
       - bookshop_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookshop_user -d bookshop"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Django (bookshop)
-  web_bookshop:
-    build:
-      context: ./bookshop
-      dockerfile: Dockerfile
-    platform: linux/amd64
-    working_dir: /app/bookshop
-    command: >
-      bash -c "
-        python manage.py makemigrations &&
-        python manage.py migrate &&
-        python manage.py runserver 0.0.0.0:8000
-      "
-    volumes:
-      - ./bookshop:/app
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: postgres://aliquser:dbpass@db_bookshop:5432/bookshop
-    depends_on:
-      - db_bookshop
-
-  # PostgreSQL для FastAPI
+  # PostgreSQL для API Store
   db_api:
     image: postgres:15
     container_name: db_api
     platform: linux/amd64
     restart: always
     environment:
-      POSTGRES_USER: apistore_user
-      POSTGRES_PASSWORD: apipass
+      POSTGRES_USER: api_user
+      POSTGRES_PASSWORD: api_pass
       POSTGRES_DB: api_store
     volumes:
-      - apistore_data:/var/lib/postgresql/data
+      - api_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api_user -d api_store"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # FastAPI (api-store)
+  # FastAPI API Store
   api_store:
     build:
       context: ./api-store
       dockerfile: Dockerfile
+    container_name: fastapi_api_store
     platform: linux/amd64
-    working_dir: /app
-    command: >
-      bash -c "
-        uvicorn app.main:app --host 0.0.0.0 --port 5050 --reload
-      "
-    volumes:
-      - ./api-store:/app
     ports:
       - "5050:5050"
     environment:
-      DB_HOST: db_api
-      DB_PORT: "5432"
-      DB_NAME: api_store
-      DB_USER: apistore_user
-      DB_PASS: apipass
+      DATABASE_URL: postgresql://api_user:api_pass@db_api:5432/api_store
+      PYTHONPATH: /app
     depends_on:
-      - db_api
+      db_api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Flask Bookshop Application
+  bookshop:
+    build:
+      context: ./bookshop
+      dockerfile: Dockerfile
+    container_name: flask_bookshop
+    platform: linux/amd64
+    ports:
+      - "8000:8000"
+    environment:
+      FLASK_ENV: development
+      DATABASE_URL: sqlite:///bookshop.db
+      API_STORE_URL: http://api_store:5050
+    volumes:
+      - ./bookshop:/app/bookshop
+      - .:/app/static  # Монтируем корневую директорию для доступа к HTML файлам
+    depends_on:
+      - api_store
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx для статических файлов
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_frontend
+    platform: linux/amd64
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - .:/usr/share/nginx/html
+    depends_on:
+      - bookshop
+      - api_store
 
 volumes:
   bookshop_data:
-  apistore_data:
+  api_data:
