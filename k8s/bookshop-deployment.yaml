@@ -138,7 +138,7 @@ def create_order():
             order['api_store_status'] = 'connection_error'
         
         cart.clear()
-        print(f'🎉 Заказ {order_id} создан! Сумма: {order[\\\"total\\\"]} руб.')
+        print(f'🎉 Заказ {order_id} создан! Сумма: {order[\"total\"]} руб.')
         return jsonify(order), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
