@@ -253,7 +253,11 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: |
+          # Disable exit on error to handle terraform failures gracefully
+          set +e
+          
           # First try normal apply
+          echo "🚀 Attempting terraform apply..."
           terraform apply -auto-approve tfplan
           APPLY_EXIT_CODE=$?
           
@@ -273,8 +277,16 @@ jobs:
             terraform import -var="environment=$ENV" google_container_node_pool.primary_nodes "projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-$ENV/nodePools/diploma-cluster-nodes-$ENV" || true
             
             # Import other resources that might exist
-            terraform import -var="environment=$ENV" google_compute_firewall.allow_http "projects/$PROJECT_ID/global/firewalls/allow-http-$ENV" || true
-            terraform import -var="environment=$ENV" random_id.bucket_suffix "$(gcloud storage buckets list --filter="name~diploma-static-$ENV" --format="value(name)" | head -1 | sed 's/.*-//' || echo 'none')" || true
+            echo "Importing firewall rules..."
+            terraform import -var="environment=$ENV" google_compute_firewall.allow_http "projects/$PROJECT_ID/global/firewalls/allow-http-$ENV" || echo "Firewall rule not found or already imported"
+            
+            echo "Importing storage bucket..."
+            BUCKET_NAME=$(gcloud storage buckets list --filter="name~diploma-static-$ENV" --format="value(name)" | head -1 || echo "")
+            if [[ -n "$BUCKET_NAME" ]]; then
+              BUCKET_SUFFIX=$(echo "$BUCKET_NAME" | sed 's/.*-//')
+              terraform import -var="environment=$ENV" random_id.bucket_suffix "$BUCKET_SUFFIX" || echo "Bucket suffix not imported"
+              terraform import -var="environment=$ENV" google_storage_bucket.static_content "$BUCKET_NAME" || echo "Bucket not imported"
+            fi
             
             # Re-plan and apply
             echo "🔧 Re-planning after import..."
@@ -286,9 +298,12 @@ jobs:
               echo "🚀 Applying remaining changes..."
               terraform apply -auto-approve tfplan
             fi
-          else
-            echo "✅ Infrastructure applied successfully!"
-          fi
+                      else
+              echo "✅ Infrastructure applied successfully!"
+            fi
+            
+            # Re-enable exit on error
+            set -e
 
   # 7. Деплой приложений
   deploy:
