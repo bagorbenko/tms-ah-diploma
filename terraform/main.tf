@@ -132,7 +132,7 @@ resource "google_container_node_pool" "primary_nodes" {
   # Management settings
   management {
     auto_repair  = true
-    auto_upgrade = var.environment == "prod" ? false : true
+    auto_upgrade = true  # Required for REGULAR release channel
   }
 
   # Upgrade settings for production
