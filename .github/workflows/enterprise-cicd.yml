@@ -247,7 +247,7 @@ jobs:
         run: |
           terraform plan \
             -var="environment=${{ needs.init.outputs.environment }}" \
-            -var="cluster_name=diploma-${{ needs.init.outputs.environment }}" \
+            -var="cluster_name=diploma-cluster" \
             -out=tfplan
             
       - name: Terraform Apply
@@ -275,7 +275,7 @@ jobs:
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
-          cluster_name: diploma-${{ needs.init.outputs.environment }}
+          cluster_name: diploma-cluster-${{ needs.init.outputs.environment }}
           location: europe-west1-b
           project_id: ${{ env.PROJECT_ID }}
           
@@ -309,7 +309,7 @@ jobs:
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
-          cluster_name: diploma-${{ needs.init.outputs.environment }}
+          cluster_name: diploma-cluster-${{ needs.init.outputs.environment }}
           location: europe-west1-b
           project_id: ${{ env.PROJECT_ID }}
           
