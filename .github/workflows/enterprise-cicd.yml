@@ -18,8 +18,9 @@ on:
           - prod
 
 env:
-  REGISTRY: gcr.io
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGISTRY: europe-west1-docker.pkg.dev
+  PROJECT_ID: sinuous-vent-463114-h1
+  REPOSITORY: diploma-docker-repo
 
 jobs:
   # 1. Инициализация и подготовка
@@ -71,8 +72,15 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker
+      - name: Create Artifact Registry repository
+        run: |
+          gcloud artifacts repositories create ${{ env.REPOSITORY }} \
+            --repository-format=docker \
+            --location=europe-west1 \
+            --description="Docker repository for diploma project" || true
+            
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
         
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -80,8 +88,8 @@ jobs:
           context: ./${{ matrix.service }}
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}:${{ needs.init.outputs.image-tag }}
-            ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}:latest
+            ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ matrix.service }}:${{ needs.init.outputs.image-tag }}
+            ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ matrix.service }}:latest
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -274,7 +282,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           # Update image tag in deployment
-          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}:${{ needs.init.outputs.image-tag }}|g" k8s/${{ matrix.service }}-deployment.yaml
+          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ matrix.service }}:${{ needs.init.outputs.image-tag }}|g" k8s/${{ matrix.service }}-deployment.yaml
           
           # Apply Kubernetes manifests
           kubectl apply -f k8s/${{ matrix.service }}-deployment.yaml -n ${{ matrix.service }}-${{ needs.init.outputs.environment }}
