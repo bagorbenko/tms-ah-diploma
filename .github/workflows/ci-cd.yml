@@ -96,7 +96,7 @@ jobs:
         run: |
           echo "Checking existing GKE resources..."
           gcloud container clusters list --format="table(name,location,status)"
-          gcloud container node-pools list --cluster=diploma-cluster-dev-dev --location=europe-west1-b --format="table(name,status,nodeCount)" || echo "No node pools found"
+          gcloud container node-pools list --cluster=diploma-cluster-dev --location=europe-west1-b --format="table(name,status,nodeCount)" || echo "No node pools found"
 
       - name: Terraform Plan
         run: |
