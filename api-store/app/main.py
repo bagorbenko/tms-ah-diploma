@@ -15,6 +15,11 @@ create_tables()
 app = FastAPI()
 
 
+@app.get("/")
+def health_check():
+    return {"service": "API Store", "status": "healthy"}
+
+
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -84,4 +89,4 @@ def get_most_popular_day(db: Session = Depends(get_db)):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=5050)
+    uvicorn.run(app, host="0.0.0.0", port=5050)
