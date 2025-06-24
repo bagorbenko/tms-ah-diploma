@@ -33,11 +33,11 @@ spec:
           httpGet:
             path: /
             port: 5050
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /
             port: 5050
-          initialDelaySeconds: 15
+          initialDelaySeconds: 30
           periodSeconds: 15
