@@ -341,13 +341,26 @@ jobs:
           # Create namespace if it doesn't exist
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
-          # Update image tag in deployment
-          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" k8s/$SERVICE-deployment.yaml
-          sed -i "s|image: python:3.11-slim|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" k8s/$SERVICE-deployment.yaml
+          # Create temporary deployment files with correct namespace
+          cp k8s/$SERVICE-deployment.yaml /tmp/$SERVICE-deployment-$ENV.yaml
+          cp k8s/$SERVICE-service.yaml /tmp/$SERVICE-service-$ENV.yaml
           
-          # Apply Kubernetes manifests with namespace override
-          kubectl apply -f k8s/$SERVICE-deployment.yaml -n $NAMESPACE
-          kubectl apply -f k8s/$SERVICE-service.yaml -n $NAMESPACE
+          # Update namespace in deployment files
+          sed -i "s|namespace: $SERVICE|namespace: $NAMESPACE|g" /tmp/$SERVICE-deployment-$ENV.yaml
+          sed -i "s|namespace: $SERVICE|namespace: $NAMESPACE|g" /tmp/$SERVICE-service-$ENV.yaml
+          
+          # Update image tag in deployment
+          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
+          sed -i "s|image: python:3.11-slim|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
+          
+          # Update API Store URL for bookshop to use environment-specific namespace
+          if [[ "$SERVICE" == "bookshop" ]]; then
+            sed -i "s|api-store-service.api-store.svc.cluster.local|api-store-service.api-store-$ENV.svc.cluster.local|g" /tmp/$SERVICE-deployment-$ENV.yaml
+          fi
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f /tmp/$SERVICE-deployment-$ENV.yaml
+          kubectl apply -f /tmp/$SERVICE-service-$ENV.yaml
           
           # Wait for rollout
           kubectl rollout status deployment/$SERVICE-deployment -n $NAMESPACE --timeout=300s
