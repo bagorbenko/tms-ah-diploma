@@ -91,6 +91,7 @@ resource "google_container_node_pool" "primary_nodes" {
     machine_type = var.environment == "prod" ? "e2-medium" : var.machine_type
     disk_size_gb = var.disk_size
     disk_type    = "pd-standard"
+    image_type   = "COS_CONTAINERD"
 
     # Use default service account for free tier
     oauth_scopes = [
@@ -147,6 +148,14 @@ resource "google_container_node_pool" "primary_nodes" {
   depends_on = [
     google_container_cluster.diploma_cluster,
   ]
+
+  # Lifecycle management to handle updates properly
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      node_config[0].taint,
+    ]
+  }
 }
 
 # Service Account for GKE nodes (commented out for free tier)
