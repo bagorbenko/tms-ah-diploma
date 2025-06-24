@@ -417,14 +417,29 @@ jobs:
       - name: Setup DuckDNS domains
         env:
           DUCKDNS_TOKEN: ${{ secrets.DUCKDNS_TOKEN }}
-          DUCKDNS_DOMAIN: ${{ secrets.DUCKDNS_DOMAIN || 'diploma-project' }}
+          DUCKDNS_DOMAIN: diploma-project
           ENVIRONMENT: ${{ needs.init.outputs.environment }}
         run: |
-          # Make script executable
-          chmod +x scripts/setup-duckdns.sh
+          # Get external IPs from services
+          API_STORE_IP=$(kubectl get svc api-store-service -n api-store-${{ needs.init.outputs.environment }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "")
+          BOOKSHOP_IP=$(kubectl get svc bookshop-service -n bookshop-${{ needs.init.outputs.environment }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "")
           
-          # Run DuckDNS setup
-          ./scripts/setup-duckdns.sh
+          echo "🦆 Updating DuckDNS domains..."
+          echo "API Store IP: $API_STORE_IP"
+          echo "Bookshop IP: $BOOKSHOP_IP"
+          
+          # Update DuckDNS domains with correct IPs
+          if [ ! -z "$API_STORE_IP" ]; then
+            curl -s "https://www.duckdns.org/update?domains=api-diploma-project&token=${{ secrets.DUCKDNS_TOKEN }}&ip=$API_STORE_IP"
+            echo "✅ Updated api-diploma-project.duckdns.org -> $API_STORE_IP"
+          fi
+          
+          if [ ! -z "$BOOKSHOP_IP" ]; then
+            curl -s "https://www.duckdns.org/update?domains=bookshop-diploma-project&token=${{ secrets.DUCKDNS_TOKEN }}&ip=$BOOKSHOP_IP"
+            curl -s "https://www.duckdns.org/update?domains=diploma-project&token=${{ secrets.DUCKDNS_TOKEN }}&ip=$BOOKSHOP_IP"
+            echo "✅ Updated bookshop-diploma-project.duckdns.org -> $BOOKSHOP_IP"
+            echo "✅ Updated diploma-project.duckdns.org -> $BOOKSHOP_IP"
+          fi
           
       - name: Wait for DNS propagation
         run: |
