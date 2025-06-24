@@ -353,6 +353,9 @@ jobs:
           sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
           sed -i "s|image: python:3.11-slim|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
           
+          # Remove command and args overrides to use Docker image defaults
+          sed -i '/command:/,/^[[:space:]]*[^[:space:]]/{ /command:/d; /args:/d; /^[[:space:]]*-.*$/d; }' /tmp/$SERVICE-deployment-$ENV.yaml
+          
           # Update API Store URL for bookshop to use environment-specific namespace
           if [[ "$SERVICE" == "bookshop" ]]; then
             sed -i "s|api-store-service.api-store.svc.cluster.local|api-store-service.api-store-$ENV.svc.cluster.local|g" /tmp/$SERVICE-deployment-$ENV.yaml
