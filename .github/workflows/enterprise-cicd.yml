@@ -348,7 +348,7 @@ jobs:
           sed -i "s|namespace: $SERVICE-prod|namespace: $NAMESPACE|g" /tmp/$SERVICE-deployment-$ENV.yaml
           
           # Update image references to use proper registry and tag
-          sed -i "s|europe-west1-docker.pkg.dev/PROJECT_ID/fullstack-repo/$SERVICE:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
+          sed -i "s|europe-west1-docker.pkg.dev/PROJECT_ID/diploma-docker-repo/$SERVICE:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
           
           # Update API Store URL for bookshop to use environment-specific namespace
           if [[ "$SERVICE" == "bookshop" ]]; then
