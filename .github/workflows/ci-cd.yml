@@ -100,22 +100,59 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          # Только планируем, не применяем если инфраструктура уже существует
-          if gcloud container clusters describe diploma-cluster-dev --location=europe-west1-b --format="value(status)" | grep -q "RUNNING"; then
-            echo "✅ Infrastructure already exists and running"
-            echo "Skipping terraform apply to avoid duplication"
+          # Always create a plan to detect changes
+          terraform plan -input=false -out=tfplan
+          
+          # Check if there are changes
+          if terraform show -no-color tfplan | grep -q "No changes"; then
+            echo "✅ No infrastructure changes needed"
           else
-            terraform plan -input=false -out=tfplan
+            echo "📋 Infrastructure changes detected, will apply in next step"
           fi
 
       - name: Terraform Apply
         run: |
-          # Применяем только если кластер не существует
-          if gcloud container clusters describe diploma-cluster-dev --location=europe-west1-b --format="value(status)" | grep -q "RUNNING"; then
-            echo "✅ Cluster already exists, skipping apply"
+          # Check if there are changes to apply
+          if terraform show -no-color tfplan | grep -q "No changes"; then
+            echo "✅ No infrastructure changes needed, skipping apply"
           else
-            echo "Creating new infrastructure..."
-            terraform apply -input=false tfplan
+            echo "Applying infrastructure changes..."
+            
+            # First try normal apply
+            if ! terraform apply -input=false -auto-approve tfplan; then
+              echo "❌ Normal apply failed, checking if resources already exist..."
+              
+              # Check if it's a resource already exists error
+              if [[ $? -eq 1 ]]; then
+                echo "🔄 Attempting to import existing resources..."
+                
+                                 # Try to import existing resources
+                 echo "Importing existing cluster and node pool..."
+                 # Import dev resources
+                 terraform import google_container_cluster.diploma_cluster projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-dev || true
+                 terraform import google_container_node_pool.primary_nodes projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-dev/nodePools/diploma-cluster-nodes-dev || true
+                 
+                 # Also try to import prod resources if they exist
+                 terraform import -var="environment=prod" google_container_cluster.diploma_cluster projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-prod || true
+                 terraform import -var="environment=prod" google_container_node_pool.primary_nodes projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-prod/nodePools/diploma-cluster-nodes-prod || true
+                
+                # Re-plan and apply
+                echo "🔧 Re-planning after import..."
+                terraform plan -input=false -out=tfplan
+                
+                if terraform show -no-color tfplan | grep -q "No changes"; then
+                  echo "✅ All resources now in sync, no changes needed"
+                else
+                  echo "🚀 Applying remaining changes..."
+                  terraform apply -input=false -auto-approve tfplan
+                fi
+              else
+                echo "❌ Apply failed with unexpected error"
+                exit 1
+              fi
+            else
+              echo "✅ Infrastructure applied successfully!"
+            fi
           fi
 
   deploy:
