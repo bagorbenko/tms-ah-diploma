@@ -254,34 +254,37 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: |
           # First try normal apply
-          if ! terraform apply -auto-approve tfplan; then
+          terraform apply -auto-approve tfplan
+          APPLY_EXIT_CODE=$?
+          
+          if [[ $APPLY_EXIT_CODE -ne 0 ]]; then
             echo "❌ Normal apply failed, checking if resources already exist..."
             
-            # Check if it's a resource already exists error
-            if [[ $? -eq 1 ]]; then
-              echo "🔄 Attempting to import existing resources..."
-              
-              # Try to import existing resources based on environment
-              ENV="${{ needs.init.outputs.environment }}"
-              PROJECT_ID="${{ env.PROJECT_ID }}"
-              
-              echo "Importing existing cluster and node pool for environment: $ENV"
-              terraform import -var="environment=$ENV" google_container_cluster.diploma_cluster "projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-$ENV" || true
-              terraform import -var="environment=$ENV" google_container_node_pool.primary_nodes "projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-$ENV/nodePools/diploma-cluster-nodes-$ENV" || true
-              
-              # Re-plan and apply
-              echo "🔧 Re-planning after import..."
-              terraform plan -var="environment=$ENV" -var="cluster_name=diploma-cluster" -out=tfplan
-              
-              if terraform show -no-color tfplan | grep -q "No changes"; then
-                echo "✅ All resources now in sync, no changes needed"
-              else
-                echo "🚀 Applying remaining changes..."
-                terraform apply -auto-approve tfplan
-              fi
+            # Try to import existing resources based on environment
+            ENV="${{ needs.init.outputs.environment }}"
+            PROJECT_ID="${{ env.PROJECT_ID }}"
+            
+            echo "🔄 Attempting to import existing resources for environment: $ENV"
+            
+            # Import cluster
+            terraform import -var="environment=$ENV" google_container_cluster.diploma_cluster "projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-$ENV" || true
+            
+            # Import node pool
+            terraform import -var="environment=$ENV" google_container_node_pool.primary_nodes "projects/$PROJECT_ID/locations/europe-west1-b/clusters/diploma-cluster-$ENV/nodePools/diploma-cluster-nodes-$ENV" || true
+            
+            # Import other resources that might exist
+            terraform import -var="environment=$ENV" google_compute_firewall.allow_http "projects/$PROJECT_ID/global/firewalls/allow-http-$ENV" || true
+            terraform import -var="environment=$ENV" random_id.bucket_suffix "$(gcloud storage buckets list --filter="name~diploma-static-$ENV" --format="value(name)" | head -1 | sed 's/.*-//' || echo 'none')" || true
+            
+            # Re-plan and apply
+            echo "🔧 Re-planning after import..."
+            terraform plan -var="environment=$ENV" -var="cluster_name=diploma-cluster" -out=tfplan
+            
+            if terraform show -no-color tfplan | grep -q "No changes"; then
+              echo "✅ All resources now in sync, no changes needed"
             else
-              echo "❌ Apply failed with unexpected error"
-              exit 1
+              echo "🚀 Applying remaining changes..."
+              terraform apply -auto-approve tfplan
             fi
           else
             echo "✅ Infrastructure applied successfully!"
