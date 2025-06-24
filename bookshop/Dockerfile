@@ -22,4 +22,5 @@ COPY . .
 
 # 4. Запускаем Django сервер
 EXPOSE 8000
+WORKDIR /app/bookshop
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

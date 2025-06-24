@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
 from pathlib import Path
-import dj_database_url
+
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,12 +87,21 @@ WSGI_APPLICATION = "bookshop.wsgi.application"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 
-try:
-    DATABASES = {
-        "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=600)
-    }
-except KeyError:
-    # Fallback to SQLite if DATABASE_URL is not set
+if dj_database_url and "DATABASE_URL" in os.environ:
+    try:
+        DATABASES = {
+            "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=600)
+        }
+    except Exception as e:
+        print(f"⚠️ Failed to parse DATABASE_URL: {e}")
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
+else:
+    # Fallback to SQLite if dj_database_url is not available or DATABASE_URL is not set
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
