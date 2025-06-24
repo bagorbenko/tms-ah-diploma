@@ -514,8 +514,9 @@ jobs:
           
       - name: Upload to Cloud Storage
         run: |
-          gsutil cp index.html gs://diploma-static-${{ needs.init.outputs.environment }}/
-          gsutil web set -m index.html gs://diploma-static-${{ needs.init.outputs.environment }}/
+          gsutil cp api-store-frontend.html gs://diploma-static-${{ needs.init.outputs.environment }}/
+          gsutil cp bookshop-frontend.html gs://diploma-static-${{ needs.init.outputs.environment }}/
+          gsutil web set -m bookshop-frontend.html gs://diploma-static-${{ needs.init.outputs.environment }}/
 
   # Уведомления о результатах
   notify:
