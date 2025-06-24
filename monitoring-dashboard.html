@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Diploma Project - Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-card.api-store {
+            border-left-color: #e74c3c;
+        }
+        
+        .service-card.bookshop {
+            border-left-color: #2ecc71;
+        }
+        
+        .service-card.grafana {
+            border-left-color: #f39c12;
+        }
+        
+        .service-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .service-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+        
+        .service-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .service-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-online {
+            background-color: #2ecc71;
+        }
+        
+        .status-offline {
+            background-color: #e74c3c;
+        }
+        
+        .service-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .service-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .service-link:hover {
+            background: #2980b9;
+        }
+        
+        .metrics {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .metric-label {
+            color: #7f8c8d;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Diploma Project Monitoring</h1>
+            <p>Полнофункциональная система мониторинга микросервисов</p>
+        </div>
+        
+        <div class="services-grid">
+            <!-- API Store Service -->
+            <div class="service-card api-store">
+                <div class="service-header">
+                    <div class="service-icon">🛒</div>
+                    <div class="service-title">API Store</div>
+                </div>
+                <div class="service-status">
+                    <div class="status-dot status-online"></div>
+                    <span>Online - FastAPI Service</span>
+                </div>
+                <div class="service-links">
+                    <a href="http://130.211.61.44" class="service-link" target="_blank">🌐 Production</a>
+                    <a href="http://api-diploma-project.duckdns.org" class="service-link" target="_blank">🦆 DuckDNS</a>
+                    <a href="http://130.211.61.44/docs" class="service-link" target="_blank">📚 API Docs</a>
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <span class="metric-label">Порт:</span>
+                        <span class="metric-value">80</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Тип:</span>
+                        <span class="metric-value">FastAPI + PostgreSQL</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Namespace:</span>
+                        <span class="metric-value">api-store-prod</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bookshop Service -->
+            <div class="service-card bookshop">
+                <div class="service-header">
+                    <div class="service-icon">📚</div>
+                    <div class="service-title">Bookshop</div>
+                </div>
+                <div class="service-status">
+                    <div class="status-dot status-online"></div>
+                    <span>Online - Flask Service</span>
+                </div>
+                <div class="service-links">
+                    <a href="http://35.241.155.121" class="service-link" target="_blank">🌐 Production</a>
+                    <a href="http://bookshop-diploma-project.duckdns.org" class="service-link" target="_blank">🦆 DuckDNS</a>
+                    <a href="http://35.241.155.121/api/books" class="service-link" target="_blank">📖 Books API</a>
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <span class="metric-label">Порт:</span>
+                        <span class="metric-value">80</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Тип:</span>
+                        <span class="metric-value">Flask + PostgreSQL</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Namespace:</span>
+                        <span class="metric-value">bookshop-prod</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grafana Service -->
+            <div class="service-card grafana">
+                <div class="service-header">
+                    <div class="service-icon">📊</div>
+                    <div class="service-title">Grafana Monitor</div>
+                </div>
+                <div class="service-status">
+                    <div class="status-dot status-online"></div>
+                    <span>Online - Monitoring Dashboard</span>
+                </div>
+                <div class="service-links">
+                    <a href="http://34.76.217.129:32743" class="service-link" target="_blank">🌐 Direct Access</a>
+                    <a href="http://grafana-diploma-project.duckdns.org:32743" class="service-link" target="_blank">🦆 DuckDNS</a>
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <span class="metric-label">Порт:</span>
+                        <span class="metric-value">32743</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Логин:</span>
+                        <span class="metric-value">admin</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Пароль:</span>
+                        <span class="metric-value">diploma-2025</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Health Check -->
+        <div class="service-card">
+            <div class="service-header">
+                <div class="service-icon">⚡</div>
+                <div class="service-title">Quick Health Check</div>
+            </div>
+            <div id="health-results">
+                <p>Нажмите кнопку обновления для проверки статуса всех сервисов</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>🎓 Diploma Project 2025 | Kubernetes + Docker + Microservices</p>
+            <p>Последнее обновление: <span id="last-update"></span></p>
+        </div>
+    </div>
+    
+    <button class="refresh-btn" onclick="refreshStatus()" title="Обновить статус">🔄</button>
+    
+    <script>
+        async function checkServiceHealth(url, name) {
+            try {
+                const response = await fetch(url, { 
+                    method: 'GET',
+                    mode: 'no-cors',
+                    timeout: 5000 
+                });
+                return { name, status: 'online', response: 'OK' };
+            } catch (error) {
+                return { name, status: 'offline', error: error.message };
+            }
+        }
+        
+        async function refreshStatus() {
+            const healthResults = document.getElementById('health-results');
+            healthResults.innerHTML = '<p>⏳ Проверяем статус сервисов...</p>';
+            
+            const services = [
+                { name: 'API Store', url: 'http://130.211.61.44' },
+                { name: 'Bookshop', url: 'http://35.241.155.121' },
+                { name: 'Grafana', url: 'http://34.76.217.129:32743' }
+            ];
+            
+            const results = await Promise.all(
+                services.map(service => checkServiceHealth(service.url, service.name))
+            );
+            
+            let html = '<h4>🔍 Результаты проверки:</h4>';
+            results.forEach(result => {
+                const statusIcon = result.status === 'online' ? '✅' : '❌';
+                html += `<div class="metric">
+                    <span class="metric-label">${statusIcon} ${result.name}:</span>
+                    <span class="metric-value">${result.status.toUpperCase()}</span>
+                </div>`;
+            });
+            
+            healthResults.innerHTML = html;
+            document.getElementById('last-update').textContent = new Date().toLocaleString('ru-RU');
+        }
+        
+        // Автоматическое обновление времени
+        document.getElementById('last-update').textContent = new Date().toLocaleString('ru-RU');
+        
+        // Автоматическая проверка каждые 30 секунд
+        setInterval(refreshStatus, 30000);
+    </script>
+</body>
+</html> 
