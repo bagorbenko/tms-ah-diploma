@@ -528,8 +528,40 @@ jobs:
           sudo apt-get update
           sudo apt-get install k6
           
-      - name: Run load tests
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: diploma-cluster-${{ needs.init.outputs.environment }}
+          location: europe-west1-b
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Get service URLs
+        id: get-urls
         run: |
+          # Get external IPs from services
+          API_STORE_IP=$(kubectl get svc api-store-service -n api-store-${{ needs.init.outputs.environment }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "")
+          BOOKSHOP_IP=$(kubectl get svc bookshop-service -n bookshop-${{ needs.init.outputs.environment }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "")
+          
+          echo "API_STORE_URL=http://$API_STORE_IP" >> $GITHUB_OUTPUT
+          echo "BOOKSHOP_URL=http://$BOOKSHOP_IP" >> $GITHUB_OUTPUT
+          
+          echo "🔗 Load testing URLs:"
+          echo "API Store: http://$API_STORE_IP"
+          echo "Bookshop: http://$BOOKSHOP_IP"
+          
+      - name: Run load tests
+        env:
+          API_STORE_URL: ${{ steps.get-urls.outputs.API_STORE_URL }}
+          BOOKSHOP_URL: ${{ steps.get-urls.outputs.BOOKSHOP_URL }}
+        run: |
+          echo "🏋️ Running load tests against production services..."
+          echo "API Store URL: $API_STORE_URL"
+          echo "Bookshop URL: $BOOKSHOP_URL"
           k6 run tests/load-test.js
           
       - name: Upload load test results
