@@ -529,9 +529,24 @@ jobs:
           
       - name: Upload to Cloud Storage
         run: |
-          gsutil cp api-store-frontend.html gs://diploma-static-${{ needs.init.outputs.environment }}/
-          gsutil cp bookshop-frontend.html gs://diploma-static-${{ needs.init.outputs.environment }}/
-          gsutil web set -m bookshop-frontend.html gs://diploma-static-${{ needs.init.outputs.environment }}/
+          # Find the correct bucket name (with random suffix)
+          BUCKET_NAME=$(gsutil ls | grep "diploma-static-${{ needs.init.outputs.environment }}" | head -1 | sed 's|gs://||' | sed 's|/||')
+          
+          if [ -z "$BUCKET_NAME" ]; then
+            echo "❌ No bucket found for environment ${{ needs.init.outputs.environment }}"
+            exit 1
+          fi
+          
+          echo "📦 Uploading to bucket: $BUCKET_NAME"
+          
+          gsutil cp api-store-frontend.html gs://$BUCKET_NAME/
+          gsutil cp bookshop-frontend.html gs://$BUCKET_NAME/
+          gsutil web set -m bookshop-frontend.html gs://$BUCKET_NAME/
+          gsutil iam ch allUsers:objectViewer gs://$BUCKET_NAME/
+          
+          echo "✅ Frontend deployed to:"
+          echo "📚 Bookshop: https://storage.googleapis.com/$BUCKET_NAME/bookshop-frontend.html"
+          echo "🛒 API Store: https://storage.googleapis.com/$BUCKET_NAME/api-store-frontend.html"
 
   # Уведомления о результатах
   notify:
