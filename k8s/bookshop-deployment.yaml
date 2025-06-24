@@ -20,7 +20,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: bookshop
-        image: europe-west1-docker.pkg.dev/PROJECT_ID/fullstack-repo/bookshop:latest
+        image: europe-west1-docker.pkg.dev/PROJECT_ID/diploma-docker-repo/bookshop:latest
         ports:
         - containerPort: 8000
         env:

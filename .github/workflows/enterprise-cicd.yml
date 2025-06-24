@@ -382,7 +382,7 @@ jobs:
           
           # Wait for rollout
           echo "⏳ Waiting for $SERVICE deployment rollout..."
-          kubectl rollout status deployment/$SERVICE-deployment -n $NAMESPACE --timeout=300s
+          kubectl rollout status deployment/$SERVICE-deployment -n $NAMESPACE --timeout=600s
           
           # Check pod status
           echo "🔍 Checking $SERVICE pod status..."

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: api-store
-        image: europe-west1-docker.pkg.dev/PROJECT_ID/fullstack-repo/api-store:latest
+        image: europe-west1-docker.pkg.dev/PROJECT_ID/diploma-docker-repo/api-store:latest
         ports:
         - containerPort: 5050
         env:
