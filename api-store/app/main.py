@@ -22,11 +22,15 @@ def health_check():
 
 # Dependency
 def get_db():
-    db = SessionLocal()
     try:
-        yield db
-    finally:
-        db.close()
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"⚠️ Database connection failed: {e}")
+        yield None
 
 
 @app.exception_handler(ValidationError)

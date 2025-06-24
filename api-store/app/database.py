@@ -21,7 +21,12 @@ Base = declarative_base()
 # Функция для создания таблиц (используется в main.py)
 def create_tables():
     """Создает таблицы в базе данных"""
-    # Импортируем модели, чтобы они были зарегистрированы
-    from app import models
-    Base.metadata.create_all(bind=engine)
+    try:
+        # Импортируем модели, чтобы они были зарегистрированы
+        from app import models
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created successfully")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not create database tables: {e}")
+        print("Application will continue without database")
 
