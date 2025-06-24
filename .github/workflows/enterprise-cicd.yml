@@ -343,21 +343,16 @@ jobs:
           
           # Create temporary deployment files with correct namespace
           cp k8s/$SERVICE-deployment.yaml /tmp/$SERVICE-deployment-$ENV.yaml
-          cp k8s/$SERVICE-service.yaml /tmp/$SERVICE-service-$ENV.yaml
           
           # Update namespace in deployment files
-          sed -i "s|namespace: $SERVICE|namespace: $NAMESPACE|g" /tmp/$SERVICE-deployment-$ENV.yaml
-          sed -i "s|namespace: $SERVICE|namespace: $NAMESPACE|g" /tmp/$SERVICE-service-$ENV.yaml
+          sed -i "s|namespace: $SERVICE-prod|namespace: $NAMESPACE|g" /tmp/$SERVICE-deployment-$ENV.yaml
           
-          # Update image tag in deployment
-          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
-          sed -i "s|image: python:3.11-slim|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
-          
-          # Deployment files now use proper Docker images, no need to remove command/args
+          # Update image references to use proper registry and tag
+          sed -i "s|europe-west1-docker.pkg.dev/PROJECT_ID/fullstack-repo/$SERVICE:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" /tmp/$SERVICE-deployment-$ENV.yaml
           
           # Update API Store URL for bookshop to use environment-specific namespace
           if [[ "$SERVICE" == "bookshop" ]]; then
-            sed -i "s|api-store-service.api-store.svc.cluster.local|api-store-service.api-store-$ENV.svc.cluster.local|g" /tmp/$SERVICE-deployment-$ENV.yaml
+            sed -i "s|api-store-service.api-store-prod.svc.cluster.local|api-store-service.api-store-$ENV.svc.cluster.local|g" /tmp/$SERVICE-deployment-$ENV.yaml
           fi
           
           # Add tolerations for production environment if needed
@@ -382,11 +377,20 @@ jobs:
           fi
           
           # Apply Kubernetes manifests
+          echo "📦 Applying $SERVICE deployment..."
           kubectl apply -f /tmp/$SERVICE-deployment-$ENV.yaml
-          kubectl apply -f /tmp/$SERVICE-service-$ENV.yaml
           
           # Wait for rollout
+          echo "⏳ Waiting for $SERVICE deployment rollout..."
           kubectl rollout status deployment/$SERVICE-deployment -n $NAMESPACE --timeout=300s
+          
+          # Check pod status
+          echo "🔍 Checking $SERVICE pod status..."
+          kubectl get pods -n $NAMESPACE -l app=$SERVICE
+          
+          # Get service info
+          echo "🌐 Getting $SERVICE service info..."
+          kubectl get service $SERVICE-service -n $NAMESPACE || echo "Service not found"
 
   # 8. Настройка DuckDNS и TLS
   duckdns-tls-setup:
@@ -528,4 +532,6 @@ jobs:
       - name: Notify on failure
         if: ${{ needs.deploy.result == 'failure' }}
         run: |
-          echo "❌ Deployment to ${{ needs.init.outputs.environment }} failed!" 
+          echo "❌ Deployment to ${{ needs.init.outputs.environment }} failed!"
+
+ 
