@@ -358,6 +358,27 @@ jobs:
             sed -i "s|api-store-service.api-store.svc.cluster.local|api-store-service.api-store-$ENV.svc.cluster.local|g" /tmp/$SERVICE-deployment-$ENV.yaml
           fi
           
+          # Add tolerations for production environment if needed
+          if [[ "$ENV" == "prod" ]]; then
+            echo "Adding production tolerations..."
+            # Add toleration directly to the deployment template spec
+            awk '
+            /^    spec:$/ && in_template {
+              print $0
+              print "      tolerations:"
+              print "      - key: \"environment\""
+              print "        operator: \"Equal\""
+              print "        value: \"production\""
+              print "        effect: \"NoSchedule\""
+              next
+            }
+            /^  template:$/ { in_template=1 }
+            /^  strategy:$/ { in_template=0 }
+            { print }
+            ' /tmp/$SERVICE-deployment-$ENV.yaml > /tmp/$SERVICE-deployment-$ENV-with-tolerations.yaml
+            mv /tmp/$SERVICE-deployment-$ENV-with-tolerations.yaml /tmp/$SERVICE-deployment-$ENV.yaml
+          fi
+          
           # Apply Kubernetes manifests
           kubectl apply -f /tmp/$SERVICE-deployment-$ENV.yaml
           kubectl apply -f /tmp/$SERVICE-service-$ENV.yaml
