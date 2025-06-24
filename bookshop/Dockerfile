@@ -20,7 +20,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 3. Копируем код
 COPY . .
 
-# 4. Запускаем Django сервер
+# 4. Запускаем простое Flask приложение (временно вместо Django)
 EXPOSE 8000
-WORKDIR /app/bookshop
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000", "--insecure"]
+CMD ["python", "simple_app.py"]

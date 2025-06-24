@@ -54,3 +54,5 @@ setuptools~=60.2.0
 factory_boy==3.2.1
 pytest-django==4.5.2
 dj-database-url
+flask
+flask-cors
