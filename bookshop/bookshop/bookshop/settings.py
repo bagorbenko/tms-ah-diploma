@@ -32,6 +32,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Add some debug info
+print(f"🔧 Django starting with DEBUG={DEBUG}")
+print(f"🔧 ALLOWED_HOSTS={ALLOWED_HOSTS}")
+print(f"🔧 Database engine: {DATABASES['default']['ENGINE']}")
+
 
 # Application definition
 
