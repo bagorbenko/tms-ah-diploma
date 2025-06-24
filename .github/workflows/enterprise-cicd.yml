@@ -332,15 +332,25 @@ jobs:
           
       - name: Deploy to Kubernetes
         run: |
-          # Update image tag in deployment
-          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ matrix.service }}:${{ needs.init.outputs.image-tag }}|g" k8s/${{ matrix.service }}-deployment.yaml
+          ENV="${{ needs.init.outputs.environment }}"
+          SERVICE="${{ matrix.service }}"
+          NAMESPACE="${SERVICE}-${ENV}"
           
-          # Apply Kubernetes manifests
-          kubectl apply -f k8s/${{ matrix.service }}-deployment.yaml -n ${{ matrix.service }}-${{ needs.init.outputs.environment }}
-          kubectl apply -f k8s/${{ matrix.service }}-service.yaml -n ${{ matrix.service }}-${{ needs.init.outputs.environment }}
+          echo "🚀 Deploying $SERVICE to environment $ENV in namespace $NAMESPACE"
+          
+          # Create namespace if it doesn't exist
+          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Update image tag in deployment
+          sed -i "s|image: gcr.io.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" k8s/$SERVICE-deployment.yaml
+          sed -i "s|image: python:3.11-slim|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/$SERVICE:${{ needs.init.outputs.image-tag }}|g" k8s/$SERVICE-deployment.yaml
+          
+          # Apply Kubernetes manifests with namespace override
+          kubectl apply -f k8s/$SERVICE-deployment.yaml -n $NAMESPACE
+          kubectl apply -f k8s/$SERVICE-service.yaml -n $NAMESPACE
           
           # Wait for rollout
-          kubectl rollout status deployment/${{ matrix.service }}-deployment -n ${{ matrix.service }}-${{ needs.init.outputs.environment }}
+          kubectl rollout status deployment/$SERVICE-deployment -n $NAMESPACE --timeout=300s
 
   # 8. Настройка DuckDNS и TLS
   duckdns-tls-setup:
