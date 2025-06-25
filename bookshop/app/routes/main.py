@@ -6,15 +6,43 @@ from app.models.user import User
 from app.models.order import Order
 from app.models.cart import CartItem
 import os
+import requests
 
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    """Serve bookshop frontend as main page"""
-    # Прямой путь к HTML файлу в корне проекта
-    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-    return send_from_directory(app_dir, 'bookshop-frontend.html')
+    """Proxy bookshop frontend from Cloud Storage"""
+    try:
+        # Получаем HTML из Cloud Storage
+        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
+        if response.status_code == 200:
+            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        else:
+            # Fallback на локальный файл
+            app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+            return send_from_directory(app_dir, 'bookshop-frontend.html')
+    except Exception as e:
+        # Fallback на информационную страницу
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Bookshop - Frontend Loading</title>
+            <meta charset="utf-8">
+        </head>
+        <body>
+            <h1>Bookshop Service</h1>
+            <p>Frontend is temporarily unavailable. Please use direct links:</p>
+            <ul>
+                <li><a href="https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html">Bookshop Frontend</a></li>
+                <li><a href="https://storage.googleapis.com/diploma-static-prod-645ba250/api-store-frontend.html">API Store Frontend</a></li>
+                <li><a href="/api">API Documentation</a></li>
+            </ul>
+            <p>Error: {str(e)}</p>
+        </body>
+        </html>
+        """, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 @main_bp.route('/web')
 def web_index():
