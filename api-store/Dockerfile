@@ -3,6 +3,11 @@
 # Базовый образ с Python 3.10 на Debian slim
 FROM python:3.10-slim
 
+# Устанавливаем переменные окружения для UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV PYTHONIOENCODING=utf-8
+
 # Установим системные зависимости:
 #  - build-essential, gcc  — для сборки некоторых Python-модулей
 #  - libpq-dev           — клиентская библиотека PostgreSQL (libpq >= 10)
@@ -11,6 +16,8 @@ RUN apt-get update \
     build-essential \
     gcc \
     libpq-dev \
+    locales \
+ && locale-gen C.UTF-8 \
  && rm -rf /var/lib/apt/lists/*
 
 # Не будем генерировать .pyc-файлы и сделаем вывод немедленным

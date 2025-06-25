@@ -8,6 +8,9 @@ migrate = Migrate()
 def create_app(config_name=None):
     """Фабрика приложений Flask"""
     app = Flask(__name__)
+    
+    # Настройка кодировки по умолчанию
+    app.config['JSON_AS_ASCII'] = False
     if config_name == 'testing':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         app.config['TESTING'] = True

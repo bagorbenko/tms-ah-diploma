@@ -5,6 +5,7 @@ from app.models.category import Category
 from app.models.user import User
 from app.models.order import Order
 from app.models.cart import CartItem
+from app.utils import fetch_html_with_encoding, ensure_utf8_headers
 import os
 import requests
 main_bp = Blueprint('main', __name__)
@@ -12,9 +13,9 @@ main_bp = Blueprint('main', __name__)
 def index():
     """Proxy bookshop frontend from Cloud Storage"""
     try:
-        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
-        if response.status_code == 200:
-            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        content, status_code = fetch_html_with_encoding('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html')
+        if content and status_code == 200:
+            return content, 200, ensure_utf8_headers()
         else:
             app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
             return send_from_directory(app_dir, 'bookshop-frontend.html')
@@ -166,48 +167,48 @@ def api_docs():
 def frontend():
     """Serve bookshop frontend (GCP bucket → local fallback)"""
     try:
-        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
-        if response.status_code == 200:
-            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        content, status_code = fetch_html_with_encoding('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html')
+        if content and status_code == 200:
+            return content, 200, ensure_utf8_headers()
         else:
             app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
             return send_from_directory(app_dir, 'bookshop-frontend.html')
     except Exception as e:
-        return f"<h1>Bookshop Frontend временно недоступен</h1><p>Ошибка: {str(e)}</p><p><a href='/api'>API Documentation</a></p>", 503, {'Content-Type': 'text/html; charset=utf-8'}
+        return f"<h1>Bookshop Frontend временно недоступен</h1><p>Ошибка: {str(e)}</p><p><a href='/api'>API Documentation</a></p>", 503, ensure_utf8_headers()
 @main_bp.route('/html')
 def html_frontend():
     """Serve HTML frontend (alternative route)"""
     try:
-        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
-        if response.status_code == 200:
-            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        content, status_code = fetch_html_with_encoding('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html')
+        if content and status_code == 200:
+            return content, 200, ensure_utf8_headers()
         else:
             app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
             return send_from_directory(app_dir, 'bookshop-frontend.html')
     except Exception as e:
-        return f"<h1>Bookshop Frontend временно недоступен</h1><p>Ошибка: {str(e)}</p><p><a href='/api'>API Documentation</a></p>", 503
+        return f"<h1>Bookshop Frontend временно недоступен</h1><p>Ошибка: {str(e)}</p><p><a href='/api'>API Documentation</a></p>", 503, ensure_utf8_headers()
 @main_bp.route('/shop')
 def shop_frontend():
     """Direct route to bookshop frontend"""
     try:
-        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
-        if response.status_code == 200:
-            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        content, status_code = fetch_html_with_encoding('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html')
+        if content and status_code == 200:
+            return content, 200, ensure_utf8_headers()
         else:
-            return "<h1>Bookshop Frontend</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+            return "<h1>Bookshop Frontend</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, ensure_utf8_headers()
     except Exception:
-        return "<h1>Bookshop</h1><p>Интерфейс временно недоступен</p><p><a href='/api'>API</a></p>", 503
+        return "<h1>Bookshop</h1><p>Интерфейс временно недоступен</p><p><a href='/api'>API</a></p>", 503, ensure_utf8_headers()
 @main_bp.route('/analytics')
 def analytics_frontend():
     """Serve API Store analytics frontend"""
     try:
-        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/api-store-frontend.html', timeout=10)
-        if response.status_code == 200:
-            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        content, status_code = fetch_html_with_encoding('https://storage.googleapis.com/diploma-static-prod-645ba250/api-store-frontend.html')
+        if content and status_code == 200:
+            return content, 200, ensure_utf8_headers()
         else:
-            return "<h1>Analytics</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+            return "<h1>Analytics</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, ensure_utf8_headers()
     except Exception:
-        return "<h1>Analytics</h1><p>Интерфейс временно недоступен</p>", 503
+        return "<h1>Analytics</h1><p>Интерфейс временно недоступен</p>", 503, ensure_utf8_headers()
 @main_bp.route('/monitoring')
 def monitoring_redirect():
     """Redirect to Grafana monitoring"""

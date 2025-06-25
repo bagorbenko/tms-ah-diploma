@@ -20,7 +20,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: bookshop
-        image: europe-west1-docker.pkg.dev/sinuous-vent-463114-h1/diploma-docker-repo/bookshop:latest
+        image: europe-west1-docker.pkg.dev/sinuous-vent-463114-h1/diploma-docker-repo/bookshop:utf8-fix
         ports:
         - containerPort: 8000
         env:
@@ -28,6 +28,12 @@ spec:
           value: "http://api-store-service.api-store-prod.svc.cluster.local"
         - name: FLASK_ENV
           value: "production"
+        - name: LANG
+          value: "C.UTF-8"
+        - name: LC_ALL
+          value: "C.UTF-8"
+        - name: PYTHONIOENCODING
+          value: "utf-8"
         livenessProbe:
           httpGet:
             path: /health

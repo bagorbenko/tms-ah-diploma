@@ -16,12 +16,18 @@ spec:
     spec:
       containers:
       - name: api-store
-        image: europe-west1-docker.pkg.dev/sinuous-vent-463114-h1/diploma-docker-repo/api-store:latest
+        image: europe-west1-docker.pkg.dev/sinuous-vent-463114-h1/diploma-docker-repo/api-store:utf8-fix
         ports:
         - containerPort: 5050
         env:
         - name: DATABASE_URL
           value: "postgresql://user:password@postgres:5432/api_store"
+        - name: LANG
+          value: "C.UTF-8"
+        - name: LC_ALL
+          value: "C.UTF-8"
+        - name: PYTHONIOENCODING
+          value: "utf-8"
         resources:
           requests:
             memory: "64Mi"
