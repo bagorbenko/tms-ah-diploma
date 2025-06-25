@@ -1,63 +1,106 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: frontend-nginx-config
+  name: nginx-proxy-config
   namespace: default
 data:
   nginx.conf: |
     events {
         worker_connections 1024;
     }
+    
     http {
-        upstream cloud_storage {
-            server storage.googleapis.com:443;
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        
+        # Bookshop upstream
+        upstream bookshop {
+            server bookshop-service.bookshop-prod.svc.cluster.local:5000;
+        }
+        
+        # API Store upstream
+        upstream apistore {
+            server api-store-service.api-store-prod.svc.cluster.local:5050;
         }
         
         server {
             listen 80;
             server_name _;
             
-            location / {
-                return 301 /bookshop;
-            }
-            
-            location /bookshop {
-                proxy_pass https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html;
-                proxy_set_header Host storage.googleapis.com;
+            # Root redirect to bookshop
+            location = / {
+                proxy_pass http://bookshop/;
+                proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
-                proxy_ssl_server_name on;
-                proxy_ssl_verify off;
             }
             
-            location /api-store {
-                proxy_pass https://storage.googleapis.com/diploma-static-prod-645ba250/api-store-frontend.html;
-                proxy_set_header Host storage.googleapis.com;
+            # Bookshop frontend routes
+            location ~ ^/(shop|bookshop|frontend|web|html|ui)/?$ {
+                proxy_pass http://bookshop/frontend;
+                proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
-                proxy_ssl_server_name on;
-                proxy_ssl_verify off;
             }
             
+            # Analytics/API Store frontend routes
+            location ~ ^/(analytics|dashboard|api-store)/?$ {
+                proxy_pass http://apistore/frontend;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            
+            # Bookshop API routes
+            location /api/ {
+                proxy_pass http://bookshop/api/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            
+            # API Store routes
+            location /purchases {
+                proxy_pass http://apistore/purchases;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            
+            location /most-popular-day {
+                proxy_pass http://apistore/most-popular-day;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            
+            # Health checks
             location /health {
-                return 200 "Frontend Proxy OK\n";
-                add_header Content-Type text/plain;
+                proxy_pass http://bookshop/health;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            
+            # API documentation
+            location /docs {
+                proxy_pass http://apistore/docs;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
             }
         }
     }
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-proxy
+  name: nginx-proxy
   namespace: default
+  labels:
+    app: nginx-proxy
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: frontend-proxy
+      app: nginx-proxy
   template:
     metadata:
       labels:
-        app: frontend-proxy
+        app: nginx-proxy
     spec:
       containers:
       - name: nginx
@@ -70,26 +113,27 @@ spec:
           subPath: nginx.conf
         resources:
           requests:
-            memory: "32Mi"
-            cpu: "10m"
-          limits:
             memory: "64Mi"
-            cpu: "50m"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
       volumes:
       - name: nginx-config
         configMap:
-          name: frontend-nginx-config
+          name: nginx-proxy-config
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-proxy-service
+  name: nginx-proxy-service
   namespace: default
 spec:
-  selector:
-    app: frontend-proxy
+  type: LoadBalancer
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: LoadBalancer 
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  selector:
+    app: nginx-proxy 
