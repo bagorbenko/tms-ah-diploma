@@ -9,7 +9,14 @@ import os
 
 main_bp = Blueprint('main', __name__)
 
-@main_bp.route('/')
+@main_bp.route('/web')
+def index():
+    """Serve bookshop frontend as main page"""
+    # Прямой путь к HTML файлу
+    return send_from_directory('/app/bookshop', 'bookshop-frontend.html')
+
+@main_bp.route('/api')
+@main_bp.route('/api/')
 def health_check():
     """Health check endpoint с информацией о сервисе"""
     try:
@@ -96,6 +103,16 @@ def simple_health():
     """Простой health check для Kubernetes"""
     return jsonify({'status': 'healthy'})
 
+@main_bp.route('/bookshop')
+def serve_bookshop_html():
+    """Serve bookshop HTML frontend"""
+    try:
+        with open('/app/bookshop/bookshop-frontend.html', 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return html_content, 200, {'Content-Type': 'text/html; charset=utf-8'}
+    except FileNotFoundError:
+        return "HTML file not found", 404
+
 @main_bp.route('/api/docs')
 def api_docs():
     """Документация API"""
@@ -128,21 +145,26 @@ def api_docs():
 
 @main_bp.route('/frontend')
 def frontend():
-    """Serve bookshop frontend"""
-    # Путь к корневой директории проекта
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-    return send_from_directory(root_dir, 'bookshop-frontend.html')
-
-@main_bp.route('/main')
-def main_page():
-    """Serve main index page"""
-    # Путь к корневой директории проекта
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-    return send_from_directory(root_dir, 'index.html')
+    """Redirect to main page"""
+    # Путь к директории приложения
+    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    return send_from_directory(app_dir, 'bookshop-frontend.html')
 
 @main_bp.route('/api-store-frontend')
 def api_store_frontend():
     """Serve API Store frontend"""
-    # Путь к корневой директории проекта
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-    return send_from_directory(root_dir, 'api-store-frontend.html') 
+    # Путь к директории приложения
+    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    return send_from_directory(app_dir, 'api-store-frontend.html')
+
+@main_bp.route('/html')
+def html_frontend():
+    """Serve HTML frontend (alternative route)"""
+    # Прямой путь к HTML файлу
+    return send_from_directory('/app/bookshop', 'bookshop-frontend.html')
+
+@main_bp.route('/ui')
+def ui_frontend():
+    """Serve HTML frontend (UI route)"""
+    # Прямой путь к HTML файлу
+    return send_from_directory('/app/bookshop', 'bookshop-frontend.html') 

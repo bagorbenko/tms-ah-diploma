@@ -42,8 +42,10 @@ def create_app(config_name=None):
     from app.routes.orders import orders_bp
     from app.routes.users import users_bp
     from app.routes.main import main_bp
+    from app.routes.test_route import test_bp
     
     app.register_blueprint(main_bp)
+    app.register_blueprint(test_bp)  # Тестовые HTML routes
     app.register_blueprint(books_bp, url_prefix='/api')
     app.register_blueprint(authors_bp, url_prefix='/api')
     app.register_blueprint(categories_bp, url_prefix='/api')
