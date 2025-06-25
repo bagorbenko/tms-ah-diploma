@@ -17,12 +17,14 @@ app = FastAPI(
     description="Analytics API для системы покупок книг",
     version="2.0.0"
 )
-@app.get("/")
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def root_frontend():
+    return serve_frontend()
+@app.get("/health", tags=["Health"])
 def health_check():
     return {"service": "API Store", "status": "healthy"}
 @app.get("/frontend", response_class=HTMLResponse)
 def serve_frontend():
-    """Serve API Store frontend"""
     try:
         response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/api-store-frontend.html', timeout=10)
         if response.status_code == 200:

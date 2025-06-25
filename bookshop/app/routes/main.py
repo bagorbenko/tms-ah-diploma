@@ -164,9 +164,16 @@ def api_docs():
     })
 @main_bp.route('/frontend')
 def frontend():
-    """Redirect to main page"""
-    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-    return send_from_directory(app_dir, 'bookshop-frontend.html')
+    """Serve bookshop frontend (GCP bucket → local fallback)"""
+    try:
+        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
+        if response.status_code == 200:
+            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        else:
+            app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+            return send_from_directory(app_dir, 'bookshop-frontend.html')
+    except Exception as e:
+        return f"<h1>Bookshop Frontend временно недоступен</h1><p>Ошибка: {str(e)}</p><p><a href='/api'>API Documentation</a></p>", 503, {'Content-Type': 'text/html; charset=utf-8'}
 @main_bp.route('/html')
 def html_frontend():
     """Serve HTML frontend (alternative route)"""
