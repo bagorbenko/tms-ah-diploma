@@ -1,6 +1,5 @@
 import json
 import pytest
-
 def test_health_check(client):
     """Тест health check endpoint"""
     response = client.get('/')
@@ -8,21 +7,18 @@ def test_health_check(client):
     data = json.loads(response.data)
     assert data['status'] == 'healthy'
     assert data['service'] == 'Bookshop Flask API'
-
 def test_simple_health(client):
     """Тест простого health check"""
     response = client.get('/health')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['status'] == 'healthy'
-
 def test_api_docs(client):
     """Тест документации API"""
     response = client.get('/api/docs')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['title'] == 'Bookshop API Documentation'
-
 def test_get_books_empty(client):
     """Тест получения пустого списка книг"""
     response = client.get('/api/books')
@@ -30,7 +26,6 @@ def test_get_books_empty(client):
     data = json.loads(response.data)
     assert 'books' in data
     assert isinstance(data['books'], list)
-
 def test_get_authors_empty(client):
     """Тест получения пустого списка авторов"""
     response = client.get('/api/authors')
@@ -38,7 +33,6 @@ def test_get_authors_empty(client):
     data = json.loads(response.data)
     assert 'authors' in data
     assert data['count'] == 0
-
 def test_get_categories_empty(client):
     """Тест получения пустого списка категорий"""
     response = client.get('/api/categories')
@@ -46,7 +40,6 @@ def test_get_categories_empty(client):
     data = json.loads(response.data)
     assert 'categories' in data
     assert data['count'] == 0
-
 def test_create_author(client):
     """Тест создания автора"""
     author_data = {
@@ -61,7 +54,6 @@ def test_create_author(client):
     data = json.loads(response.data)
     assert data['message'] == 'Автор создан'
     assert data['author']['name'] == 'Test Author'
-
 def test_create_category(client):
     """Тест создания категории"""
     category_data = {
@@ -75,7 +67,6 @@ def test_create_category(client):
     data = json.loads(response.data)
     assert data['message'] == 'Категория создана'
     assert data['category']['name'] == 'Test Category'
-
 def test_create_book(client, test_author, test_category):
     """Тест создания книги"""
     book_data = {
@@ -95,7 +86,6 @@ def test_create_book(client, test_author, test_category):
     data = json.loads(response.data)
     assert data['message'] == 'Книга успешно создана'
     assert data['book']['title'] == 'Test Book'
-
 def test_add_to_cart(client, test_user, test_book):
     """Тест добавления книги в корзину"""
     cart_data = {
@@ -109,7 +99,6 @@ def test_add_to_cart(client, test_user, test_book):
     assert response.status_code == 201
     data = json.loads(response.data)
     assert data['message'] == 'Книга добавлена в корзину'
-
 def test_get_cart(client, test_user):
     """Тест получения корзины"""
     response = client.get(f'/api/cart/{test_user.id}')
@@ -118,7 +107,6 @@ def test_get_cart(client, test_user):
     assert data['user_id'] == test_user.id
     assert 'items' in data
     assert 'total_price' in data
-
 def test_create_user(client):
     """Тест создания пользователя"""
     user_data = {

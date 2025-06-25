@@ -1,12 +1,7 @@
 import os
 from dotenv import load_dotenv
-
-load_dotenv()  # автоматически подгрузит .env из ./app
-
-# 1) Сначала пробуем взять готовый URL (например, sqlite:///:memory:)
+load_dotenv()  
 DATABASE_URL = os.getenv("DATABASE_URL")
-
-# 2) Если он не задан — строим Postgres-строку из DB_*
 if not DATABASE_URL:
     db_user = os.getenv("DB_USER", "")
     db_pass = os.getenv("DB_PASS", "")

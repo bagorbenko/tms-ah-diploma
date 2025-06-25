@@ -1,7 +1,5 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-
-
 class Purchase(BaseModel):
     order_id: int
     book_id: int
@@ -11,5 +9,4 @@ class Purchase(BaseModel):
     price: float
     create_at: str
     publisher_id: int
-
     model_config = ConfigDict(from_attributes=True)

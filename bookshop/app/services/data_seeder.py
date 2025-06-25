@@ -4,17 +4,12 @@ from app.models.category import Category
 from app.models.book import Book
 from app.models.user import User
 from datetime import date, datetime
-
 def seed_initial_data():
     """Заполнение базы данных начальными данными"""
     try:
-        # Проверяем, есть ли уже данные
         if Author.query.count() > 0:
-            return  # Данные уже есть
-        
+            return  
         print("🌱 Заполнение базы данных начальными данными...")
-        
-        # Создаем категории
         categories_data = [
             {'name': 'Программирование', 'description': 'Книги по программированию и разработке ПО'},
             {'name': 'Архитектура ПО', 'description': 'Книги по архитектуре программного обеспечения'},
@@ -24,16 +19,12 @@ def seed_initial_data():
             {'name': 'Веб-разработка', 'description': 'Книги по веб-разработке и фронтенду'},
             {'name': 'Машинное обучение', 'description': 'Книги по машинному обучению и ИИ'}
         ]
-        
         categories = []
         for cat_data in categories_data:
             category = Category(**cat_data)
             db.session.add(category)
             categories.append(category)
-        
-        db.session.flush()  # Получаем ID категорий
-        
-        # Создаем авторов
+        db.session.flush()  
         authors_data = [
             {'name': 'Роберт Мартин', 'bio': 'Известный автор книг по программированию и чистому коду', 'nationality': 'США'},
             {'name': 'Мартин Фаулер', 'bio': 'Эксперт по архитектуре ПО и рефакторингу', 'nationality': 'Великобритания'},
@@ -43,16 +34,12 @@ def seed_initial_data():
             {'name': 'Кайл Симпсон', 'bio': 'JavaScript эксперт и автор серии You Dont Know JS', 'nationality': 'США'},
             {'name': 'Андрей Карпатый', 'bio': 'Исследователь в области машинного обучения', 'nationality': 'Чехия'}
         ]
-        
         authors = []
         for auth_data in authors_data:
             author = Author(**auth_data)
             db.session.add(author)
             authors.append(author)
-        
-        db.session.flush()  # Получаем ID авторов
-        
-        # Создаем книги
+        db.session.flush()  
         books_data = [
             {
                 'title': 'Чистый код',
@@ -132,12 +119,9 @@ def seed_initial_data():
                 'category_id': categories[6].id
             }
         ]
-        
         for book_data in books_data:
             book = Book(**book_data)
             db.session.add(book)
-        
-        # Создаем тестового пользователя
         admin_user = User(
             username='admin',
             email='admin@bookshop.com',
@@ -149,8 +133,6 @@ def seed_initial_data():
         )
         admin_user.set_password('admin123')
         db.session.add(admin_user)
-        
-        # Создаем обычного пользователя
         test_user = User(
             username='testuser',
             email='test@bookshop.com',
@@ -161,10 +143,8 @@ def seed_initial_data():
         )
         test_user.set_password('test123')
         db.session.add(test_user)
-        
         db.session.commit()
         print("✅ Начальные данные успешно загружены!")
-        
     except Exception as e:
         db.session.rollback()
         print(f"❌ Ошибка при загрузке начальных данных: {e}")

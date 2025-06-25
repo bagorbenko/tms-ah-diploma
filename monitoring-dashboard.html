@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 Diploma Project - Monitoring Dashboard</title>
+    <title> Diploma Project - Monitoring Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -189,7 +189,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Diploma Project Monitoring</h1>
+            <h1> Diploma Project Monitoring</h1>
             <p>Полнофункциональная система мониторинга микросервисов</p>
         </div>
         
@@ -205,9 +205,9 @@
                     <span>Online - FastAPI Service</span>
                 </div>
                 <div class="service-links">
-                    <a href="http://130.211.61.44" class="service-link" target="_blank">🌐 Production</a>
+                    <a href="http://130.211.61.44" class="service-link" target="_blank"> Production</a>
                     <a href="http://api-diploma-project.duckdns.org" class="service-link" target="_blank">🦆 DuckDNS</a>
-                    <a href="http://130.211.61.44/docs" class="service-link" target="_blank">📚 API Docs</a>
+                    <a href="http://130.211.61.44/docs" class="service-link" target="_blank"> API Docs</a>
                 </div>
                 <div class="metrics">
                     <div class="metric">
@@ -228,7 +228,7 @@
             <!-- Bookshop Service -->
             <div class="service-card bookshop">
                 <div class="service-header">
-                    <div class="service-icon">📚</div>
+                    <div class="service-icon"></div>
                     <div class="service-title">Bookshop</div>
                 </div>
                 <div class="service-status">
@@ -236,9 +236,9 @@
                     <span>Online - Flask Service</span>
                 </div>
                 <div class="service-links">
-                    <a href="http://35.241.155.121" class="service-link" target="_blank">🌐 Production</a>
+                    <a href="http://35.241.155.121" class="service-link" target="_blank"> Production</a>
                     <a href="http://bookshop-diploma-project.duckdns.org" class="service-link" target="_blank">🦆 DuckDNS</a>
-                    <a href="http://35.241.155.121/api/books" class="service-link" target="_blank">📖 Books API</a>
+                    <a href="http://35.241.155.121/api/books" class="service-link" target="_blank"> Books API</a>
                 </div>
                 <div class="metrics">
                     <div class="metric">
@@ -259,7 +259,7 @@
             <!-- Grafana Service -->
             <div class="service-card grafana">
                 <div class="service-header">
-                    <div class="service-icon">📊</div>
+                    <div class="service-icon"></div>
                     <div class="service-title">Grafana Monitor</div>
                 </div>
                 <div class="service-status">
@@ -267,7 +267,7 @@
                     <span>Online - Monitoring Dashboard</span>
                 </div>
                 <div class="service-links">
-                    <a href="http://34.76.217.129:32743" class="service-link" target="_blank">🌐 Direct Access</a>
+                    <a href="http://34.76.217.129:32743" class="service-link" target="_blank"> Direct Access</a>
                     <a href="http://grafana-diploma-project.duckdns.org:32743" class="service-link" target="_blank">🦆 DuckDNS</a>
                 </div>
                 <div class="metrics">
@@ -290,7 +290,7 @@
         <!-- Quick Health Check -->
         <div class="service-card">
             <div class="service-header">
-                <div class="service-icon">⚡</div>
+                <div class="service-icon"></div>
                 <div class="service-title">Quick Health Check</div>
             </div>
             <div id="health-results">
@@ -304,7 +304,7 @@
         </div>
     </div>
     
-    <button class="refresh-btn" onclick="refreshStatus()" title="Обновить статус">🔄</button>
+    <button class="refresh-btn" onclick="refreshStatus()" title="Обновить статус"></button>
     
     <script>
         async function checkServiceHealth(url, name) {
@@ -334,9 +334,9 @@
                 services.map(service => checkServiceHealth(service.url, service.name))
             );
             
-            let html = '<h4>🔍 Результаты проверки:</h4>';
+            let html = '<h4> Результаты проверки:</h4>';
             results.forEach(result => {
-                const statusIcon = result.status === 'online' ? '✅' : '❌';
+                const statusIcon = result.status === 'online' ? '' : '';
                 html += `<div class="metric">
                     <span class="metric-label">${statusIcon} ${result.name}:</span>
                     <span class="metric-value">${result.status.toUpperCase()}</span>

@@ -1,68 +1,33 @@
-# 🎯 Diploma Project - Enterprise Microservices Platform
+# Diploma Project - Enterprise Microservices Platform
 
-> **Полнофункциональная система микросервисов с CI/CD, мониторингом и облачным развертыванием**
+> Полнофункциональная система микросервисов с CI/CD, мониторингом и облачным развертыванием
 
 [![CI/CD Pipeline](https://github.com/bagorbenko/tms-ah-diploma/actions/workflows/enterprise-cicd.yml/badge.svg)](https://github.com/bagorbenko/tms-ah-diploma/actions)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-1.32-blue.svg)](https://kubernetes.io/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://docker.com/)
 [![GCP](https://img.shields.io/badge/GCP-Deployed-green.svg)](https://cloud.google.com/)
 
-## 📋 Содержание
+## Содержание
 
-- [🏗️ Архитектура](#️-архитектура)
-- [🚀 Быстрый старт](#-быстрый-старт)
-- [🌐 Доступ к сервисам](#-доступ-к-сервисам)
-- [🔧 Локальная разработка](#-локальная-разработка)
-- [☁️ Облачное развертывание](#️-облачное-развертывание)
-- [📊 Мониторинг](#-мониторинг)
-- [🔒 Безопасность](#-безопасность)
-- [🧪 Тестирование](#-тестирование)
-- [📚 API Документация](#-api-документация)
-- [🛠️ Разработка](#️-разработка)
+- [Архитектура](#архитектура)
+- [Быстрый старт](#быстрый-старт)
+- [Доступ к сервисам](#доступ-к-сервисам)
+- [Локальная разработка](#локальная-разработка)
+- [Облачное развертывание](#облачное-развертывание)
+- [Мониторинг](#мониторинг)
+- [Безопасность](#безопасность)
+- [Тестирование](#тестирование)
+- [API Документация](#api-документация)
+- [Разработка](#разработка)
 
-## 🏗️ Архитектура
+## Архитектура
 
 ### Обзор системы
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        UI1[Bookshop Frontend]
-        UI2[API Store Frontend]
-        UI3[Monitoring Dashboard]
-    end
-    
-    subgraph "Load Balancer"
-        LB[NGINX Ingress]
-    end
-    
-    subgraph "Microservices"
-        BS[Bookshop Service<br/>Flask + PostgreSQL]
-        AS[API Store Service<br/>FastAPI + PostgreSQL]
-    end
-    
-    subgraph "Monitoring"
-        GR[Grafana]
-        PR[Prometheus]
-    end
-    
-    subgraph "Infrastructure"
-        K8S[Kubernetes GKE]
-        DB1[(PostgreSQL)]
-        DB2[(PostgreSQL)]
-        CS[Cloud Storage]
-    end
-    
-    UI1 --> LB
-    UI2 --> LB
-    LB --> BS
-    LB --> AS
-    BS --> DB1
-    AS --> DB2
-    GR --> BS
-    GR --> AS
-    UI3 --> CS
-```
+Проект представляет собой микросервисную архитектуру, состоящую из двух основных сервисов:
+
+- **Bookshop Service** - интернет-магазин книг на Flask
+- **API Store Service** - сервис аналитики на FastAPI
 
 ### Технологический стек
 
@@ -87,7 +52,7 @@ graph TB
 - **Terraform**: Infrastructure as Code
 - **Google Cloud Platform**: Облачная платформа
 
-## 🚀 Быстрый старт
+## Быстрый старт
 
 ### Предварительные требования
 
@@ -99,17 +64,17 @@ graph TB
 ### Локальный запуск
 
 ```bash
-# 1. Клонирование репозитория
+# Клонирование репозитория
 git clone https://github.com/bagorbenko/tms-ah-diploma.git
 cd tms-ah-diploma
 
-# 2. Запуск с Docker Compose
+# Запуск с Docker Compose
 docker-compose up -d
 
-# 3. Проверка статуса
+# Проверка статуса
 docker-compose ps
 
-# 4. Доступ к сервисам
+# Доступ к сервисам
 echo "Bookshop: http://localhost:8000"
 echo "API Store: http://localhost:5050"
 echo "Frontend: http://localhost:3000"
@@ -118,16 +83,16 @@ echo "Frontend: http://localhost:3000"
 ### Облачное развертывание
 
 ```bash
-# 1. Настройка GCP
+# Настройка GCP
 gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
 
-# 2. Развертывание через CI/CD
+# Развертывание через CI/CD
 git push origin main
 # Pipeline автоматически развернет все сервисы
 ```
 
-## 🌐 Доступ к сервисам
+## Доступ к сервисам
 
 ### Production Environment
 
@@ -142,9 +107,9 @@ git push origin main
 
 | Домен | Сервис | Status |
 |-------|--------|--------|
-| [bookshop-diploma-project.duckdns.org](http://bookshop-diploma-project.duckdns.org) | Bookshop | ✅ Active |
-| [api-diploma-project.duckdns.org](http://api-diploma-project.duckdns.org) | API Store | ✅ Active |
-| [grafana-diploma-project.duckdns.org:32743](http://grafana-diploma-project.duckdns.org:32743) | Grafana | ✅ Active |
+| [bookshop-diploma-project.duckdns.org](http://bookshop-diploma-project.duckdns.org) | Bookshop | Active |
+| [api-diploma-project.duckdns.org](http://api-diploma-project.duckdns.org) | API Store | Active |
+| [grafana-diploma-project.duckdns.org:32743](http://grafana-diploma-project.duckdns.org:32743) | Grafana | Active |
 
 ### Local Development
 
@@ -156,7 +121,7 @@ git push origin main
 | PostgreSQL (Bookshop) | localhost:5432 | 5432 |
 | PostgreSQL (API Store) | localhost:5433 | 5433 |
 
-## 🔧 Локальная разработка
+## Локальная разработка
 
 ### Структура проекта
 
@@ -212,383 +177,278 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 5050
 
 ### База данных
 
-#### Миграции Bookshop (Flask-Migrate)
-
 ```bash
+# Создание и применение миграций для Bookshop
 cd bookshop
-flask db init      # Инициализация
-flask db migrate   # Создание миграции
-flask db upgrade   # Применение миграций
-```
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
 
-#### Миграции API Store (Alembic)
-
-```bash
+# Создание и применение миграций для API Store
 cd api-store
-alembic revision --autogenerate -m "Description"
+alembic init alembic
+alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
 ```
 
-## ☁️ Облачное развертывание
-
-### Google Cloud Platform
-
-Проект развернут в GCP с использованием:
-
-- **GKE (Google Kubernetes Engine)**: Управляемый Kubernetes
-- **Cloud Storage**: Статические файлы
-- **Cloud SQL**: Управляемые PostgreSQL базы данных
-- **Load Balancer**: Распределение нагрузки
+## Облачное развертывание
 
 ### Terraform Infrastructure
 
 ```bash
+# Инициализация Terraform
 cd terraform
 terraform init
-terraform plan
-terraform apply
+
+# Планирование развертывания
+terraform plan -var="environment=prod"
+
+# Применение изменений
+terraform apply -var="environment=prod"
 ```
 
 ### Kubernetes Deployment
 
 ```bash
-# Развертывание всех сервисов
+# Применение манифестов
 kubectl apply -f k8s/
 
-# Проверка статуса
-kubectl get pods --all-namespaces
-kubectl get services --all-namespaces
+# Проверка статуса деплоя
+kubectl get pods -n bookshop-prod
+kubectl get pods -n api-store-prod
+
+# Просмотр логов
+kubectl logs -f deployment/bookshop-deployment -n bookshop-prod
+kubectl logs -f deployment/api-store-deployment -n api-store-prod
+```
+
+## Мониторинг
+
+### Grafana Dashboard
+
+Доступ к Grafana:
+- URL: http://34.76.217.129:32743
+- Логин: admin
+- Пароль: diploma-2025
+
+### Доступные метрики
+
+- CPU и память использование
+- Количество запросов
+- Время ответа
+- Статус сервисов
+- Ошибки и исключения
+
+### Логирование
+
+```bash
+# Просмотр логов приложений
+kubectl logs -f deployment/bookshop-deployment -n bookshop-prod
+kubectl logs -f deployment/api-store-deployment -n api-store-prod
+
+# Просмотр логов инфраструктуры
+kubectl logs -f deployment/grafana -n monitoring-prod
+```
+
+## Безопасность
+
+### Аутентификация и авторизация
+
+- JWT токены для API аутентификации
+- RBAC в Kubernetes
+- Сетевые политики для изоляции сервисов
+
+### Сканирование безопасности
+
+```bash
+# Сканирование Docker образов
+docker scout cves api-store:latest
+docker scout cves bookshop:latest
+
+# Аудит зависимостей Python
+pip audit
+```
+
+## Тестирование
+
+### Юнит тесты
+
+```bash
+# Тестирование Bookshop
+cd bookshop
+pytest tests/ -v --cov=app
+
+# Тестирование API Store
+cd api-store
+pytest tests/ -v --cov=app
+```
+
+### Интеграционные тесты
+
+```bash
+# Запуск полного набора тестов
+docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+```
+
+### Нагрузочное тестирование
+
+```bash
+# K6 нагрузочные тесты
+k6 run tests/load-test.js
+```
+
+## API Документация
+
+### Bookshop Service
+
+- Swagger UI: http://localhost:8000/api/docs
+- OpenAPI JSON: http://localhost:8000/api/openapi.json
+
+### API Store Service
+
+- FastAPI Docs: http://localhost:5050/docs
+- ReDoc: http://localhost:5050/redoc
+- OpenAPI JSON: http://localhost:5050/openapi.json
+
+### Основные эндпоинты
+
+#### Bookshop API
+
+```
+GET    /api/books          # Получить все книги
+POST   /api/books          # Создать книгу
+GET    /api/books/{id}     # Получить книгу по ID
+PUT    /api/books/{id}     # Обновить книгу
+DELETE /api/books/{id}     # Удалить книгу
+
+GET    /api/authors        # Получить всех авторов
+GET    /api/categories     # Получить все категории
+GET    /api/orders         # Получить заказы
+POST   /api/orders         # Создать заказ
+```
+
+#### API Store
+
+```
+GET    /purchases          # Получить все покупки
+POST   /purchases          # Создать покупку
+GET    /purchases/{id}     # Получить покупку по ID
+GET    /most-popular-day   # Самый популярный день
+GET    /purchases/total-count # Общее количество книг
+```
+
+## Разработка
+
+### Стандарты кода
+
+- **Python**: PEP 8, Black formatter
+- **JavaScript**: ESLint, Prettier
+- **Документация**: Docstrings для всех функций
+
+### Git Workflow
+
+```bash
+# Создание feature ветки
+git checkout -b feature/new-feature
+
+# Коммит изменений
+git add .
+git commit -m "Add new feature"
+
+# Push и создание PR
+git push origin feature/new-feature
 ```
 
 ### CI/CD Pipeline
 
-GitHub Actions автоматически выполняет:
+Pipeline включает 11 этапов:
 
-1. **🚀 Initialize Pipeline** - Инициализация
-2. **🔨 Build Applications** - Сборка Docker образов
-3. **🧪 Test Suite** - Запуск тестов
-4. **📊 Code Quality Analysis** - Анализ качества кода
-5. **🔒 Security Scanning** - Сканирование безопасности
-6. **🏗️ Infrastructure as Code** - Terraform
-7. **🚀 Deploy Applications** - Развертывание в Kubernetes
-8. **🔐 DuckDNS & TLS Setup** - Настройка доменов и SSL
-9. **📊 Setup Monitoring** - Развертывание Grafana
-10. **🏋️ Load Testing** - Нагрузочное тестирование
-11. **🌐 Deploy Static Content** - Развертывание фронтенда
+1. **Initialize** - Инициализация и настройка окружения
+2. **Build** - Сборка Docker образов
+3. **Test** - Юнит и интеграционные тесты
+4. **Code Quality** - Анализ качества кода
+5. **Security** - Сканирование безопасности
+6. **Infrastructure** - Terraform развертывание
+7. **Deploy** - Развертывание в Kubernetes
+8. **Integration Tests** - Интеграционные тесты
+9. **Performance Tests** - Тесты производительности
+10. **Monitoring Setup** - Настройка мониторинга
+11. **Notification** - Уведомления о статусе
 
-## 📊 Мониторинг
-
-### Grafana Dashboard
-
-**Доступ**: http://34.76.217.129:32743
-- **Логин**: `admin`
-- **Пароль**: `diploma-2025`
-
-### Monitoring Dashboard
-
-**URL**: [Monitoring Dashboard](https://storage.googleapis.com/diploma-static-prod-645ba250/monitoring-dashboard.html)
-
-Функции:
-- ⚡ Real-time health checks
-- 📊 Service status overview
-- 🔗 Quick access links
-- 📈 Performance metrics
-
-### Метрики
-
-- **Response Time**: Время отклика сервисов
-- **Error Rate**: Частота ошибок
-- **Throughput**: Пропускная способность
-- **Resource Usage**: Использование ресурсов
-
-## 🔒 Безопасность
-
-### Implemented Security Measures
-
-- **TLS/SSL**: Шифрование трафика (Let's Encrypt)
-- **Environment Variables**: Безопасное хранение секретов
-- **Network Policies**: Изоляция сетевого трафика
-- **Security Scanning**: Автоматическое сканирование уязвимостей
-- **Input Validation**: Валидация пользовательского ввода
-
-### Secrets Management
+### Настройка окружения разработки
 
 ```bash
-# GitHub Secrets (настроены в репозитории)
-GCP_SA_KEY              # Google Cloud Service Account
-DUCKDNS_TOKEN          # DuckDNS API token
-TF_STATE_BUCKET        # Terraform state bucket
+# Установка зависимостей разработки
+pip install -r requirements.dev.txt
+
+# Настройка pre-commit hooks
+pre-commit install
+
+# Запуск линтеров
+flake8 .
+black .
+isort .
 ```
 
-### SSL/TLS Certificates
-
-Автоматическое получение и обновление SSL сертификатов через:
-- **cert-manager**: Kubernetes оператор
-- **Let's Encrypt**: Бесплатные SSL сертификаты
-- **DuckDNS**: DNS challenge для валидации
-
-## 🧪 Тестирование
-
-### Unit Tests
-
-```bash
-# Bookshop tests
-cd bookshop
-python -m pytest tests/
-
-# API Store tests
-cd api-store
-python -m pytest app/test_main.py
-```
-
-### Load Testing (k6)
-
-```bash
-# Локальное тестирование
-k6 run tests/load-test.js
-
-# С переменными окружения
-BOOKSHOP_URL=http://35.241.155.121 \
-API_STORE_URL=http://130.211.61.44 \
-k6 run tests/load-test.js
-```
-
-### Test Coverage
-
-- **Unit Tests**: Покрытие основной бизнес-логики
-- **Integration Tests**: API endpoints
-- **Load Tests**: Performance и стабильность
-- **Security Tests**: Vulnerability scanning
-
-## 📚 API Документация
-
-### Bookshop API
-
-**Base URL**: `http://35.241.155.121` или `http://localhost:8000`
-
-#### Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/books` | Получить все книги |
-| POST | `/api/books` | Создать новую книгу |
-| GET | `/api/authors` | Получить всех авторов |
-| POST | `/api/authors` | Создать нового автора |
-| GET | `/api/categories` | Получить все категории |
-| POST | `/api/categories` | Создать новую категорию |
-| POST | `/api/cart/add` | Добавить в корзину |
-| GET | `/api/cart` | Получить корзину |
-| POST | `/api/orders` | Создать заказ |
-
-#### Пример запроса
-
-```bash
-# Получить все книги
-curl -X GET "http://35.241.155.121/api/books"
-
-# Создать новую книгу
-curl -X POST "http://35.241.155.121/api/books" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "New Book",
-    "author_id": 1,
-    "category_id": 1,
-    "price": 1500,
-    "stock": 10
-  }'
-```
-
-### API Store API
-
-**Base URL**: `http://130.211.61.44` или `http://localhost:5050`
-
-**Swagger UI**: `http://130.211.61.44/docs`
-
-#### Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Health check |
-| GET | `/purchases` | Получить все покупки |
-| POST | `/purchases` | Создать покупки |
-
-#### Пример запроса
-
-```bash
-# Health check
-curl -X GET "http://130.211.61.44/"
-
-# Получить покупки
-curl -X GET "http://130.211.61.44/purchases"
-```
-
-## 🛠️ Разработка
-
-### Добавление нового сервиса
-
-1. **Создать директорию сервиса**
-```bash
-mkdir new-service
-cd new-service
-```
-
-2. **Добавить Dockerfile**
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8080
-CMD ["python", "app.py"]
-```
-
-3. **Создать Kubernetes манифест**
-```yaml
-# k8s/new-service-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: new-service
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: new-service
-  template:
-    metadata:
-      labels:
-        app: new-service
-    spec:
-      containers:
-      - name: new-service
-        image: gcr.io/PROJECT_ID/new-service:latest
-        ports:
-        - containerPort: 8080
-```
-
-4. **Обновить CI/CD pipeline**
-```yaml
-# .github/workflows/enterprise-cicd.yml
-# Добавить new-service в matrix strategy
-strategy:
-  matrix:
-    service: [api-store, bookshop, new-service]
-```
-
-### Debugging
-
-#### Логи сервисов
-
-```bash
-# Kubernetes логи
-kubectl logs -f deployment/bookshop -n bookshop-prod
-kubectl logs -f deployment/api-store -n api-store-prod
-
-# Docker Compose логи
-docker-compose logs -f bookshop
-docker-compose logs -f api-store
-```
-
-#### Подключение к базе данных
-
-```bash
-# Локальная разработка
-psql -h localhost -p 5432 -U bookshop_user -d bookshop_db
-psql -h localhost -p 5433 -U api_store_user -d api_store_db
-
-# Kubernetes (port-forward)
-kubectl port-forward svc/postgres-bookshop 5432:5432 -n bookshop-prod
-psql -h localhost -p 5432 -U bookshop_user -d bookshop_db
-```
-
-### Полезные команды
-
-```bash
-# Kubernetes
-kubectl get all --all-namespaces
-kubectl describe pod POD_NAME -n NAMESPACE
-kubectl exec -it POD_NAME -n NAMESPACE -- /bin/bash
-
-# Docker
-docker-compose up -d --build
-docker-compose down -v
-docker system prune -a
-
-# Git
-git log --oneline -10
-git status
-git add . && git commit -m "feat: description" && git push
-```
-
-## 📋 Troubleshooting
+## Устранение неполадок
 
 ### Частые проблемы
 
-#### 1. Сервис недоступен
+#### Проблемы с базой данных
+
 ```bash
-# Проверить статус подов
-kubectl get pods -n NAMESPACE
+# Проверка подключения к PostgreSQL
+kubectl exec -it postgres-pod -- psql -U username -d database_name
 
-# Проверить логи
-kubectl logs POD_NAME -n NAMESPACE
-
-# Проверить сервисы
-kubectl get svc -n NAMESPACE
+# Восстановление базы данных
+kubectl exec -i postgres-pod -- psql -U username -d database_name < backup.sql
 ```
 
-#### 2. База данных недоступна
-```bash
-# Проверить подключение
-kubectl exec -it POD_NAME -n NAMESPACE -- psql -h postgres -U username -d database
+#### Проблемы с сетью
 
-# Проверить миграции
-kubectl exec -it POD_NAME -n NAMESPACE -- alembic current
+```bash
+# Проверка сетевой связности
+kubectl exec -it pod-name -- nslookup service-name
+
+# Проверка сетевых политик
+kubectl get networkpolicies -A
 ```
 
-#### 3. CI/CD pipeline fails
+#### Проблемы с ресурсами
+
 ```bash
-# Проверить секреты в GitHub
-# Проверить права доступа к GCP
-# Проверить Terraform state
+# Проверка использования ресурсов
+kubectl top nodes
+kubectl top pods -A
+
+# Масштабирование сервисов
+kubectl scale deployment bookshop-deployment --replicas=3
 ```
 
-## 🤝 Contributing
+### Логи и отладка
 
-1. Fork репозиторий
-2. Создать feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit изменения (`git commit -m 'Add amazing feature'`)
-4. Push в branch (`git push origin feature/amazing-feature`)
-5. Открыть Pull Request
+```bash
+# Детальные логи
+kubectl logs -f deployment/service-name --previous
 
-## 📄 License
+# События кластера
+kubectl get events --sort-by=.metadata.creationTimestamp
 
-Этот проект создан в образовательных целях для дипломной работы.
+# Описание ресурсов
+kubectl describe pod pod-name
+```
 
-## 👥 Authors
+## Лицензия
 
-- **Student**: Aliaksei Bagorbenko
-- **Institution**: TMS Academy
-- **Year**: 2025
+MIT License - см. файл [LICENSE](LICENSE) для деталей.
 
-## 🙏 Acknowledgments
+## Контакты
 
-- TMS Academy за образовательную программу
-- Google Cloud Platform за облачную инфраструктуру
-- Open Source сообщество за инструменты и библиотеки
+- Автор: [bagorbenko](https://github.com/bagorbenko)
+- Email: bagorbenko@example.com
+- Проект: [GitHub Repository](https://github.com/bagorbenko/tms-ah-diploma)
 
 ---
 
-## 📞 Support
-
-Если у вас есть вопросы или проблемы:
-
-1. Проверьте [Troubleshooting](#-troubleshooting) секцию
-2. Посмотрите [GitHub Issues](https://github.com/bagorbenko/tms-ah-diploma/issues)
-3. Проверьте [Monitoring Dashboard](https://storage.googleapis.com/diploma-static-prod-645ba250/monitoring-dashboard.html)
-
-**Последнее обновление**: 24 июня 2025
-
----
-
-*🎯 Diploma Project - Enterprise Microservices Platform*
+**Версия документации**: 2.0  
+**Последнее обновление**: 2025-01-01

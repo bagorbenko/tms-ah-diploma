@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-  # PostgreSQL для Flask Bookshop (опционально, по умолчанию SQLite)
   db_bookshop:
     image: postgres:15
     container_name: db_bookshop
@@ -21,7 +20,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # PostgreSQL для API Store
   db_api:
     image: postgres:15
     container_name: db_api
@@ -41,7 +39,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # FastAPI API Store
   api_store:
     build:
       context: ./api-store
@@ -62,7 +59,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # Flask Bookshop Application
   bookshop:
     build:
       context: ./bookshop
@@ -86,7 +82,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # Nginx для статических файлов
   nginx:
     image: nginx:alpine
     container_name: nginx_frontend

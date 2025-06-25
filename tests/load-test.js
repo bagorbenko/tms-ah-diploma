@@ -2,12 +2,10 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter, Rate, Trend } from 'k6/metrics';
 
-// Custom metrics
 export let errorCount = new Counter('errors');
 export let errorRate = new Rate('error_rate');
 export let responseTimeTrend = new Trend('response_time');
 
-// Test configuration
 export let options = {
   stages: [
     { duration: '1m', target: 5 },  // Ramp-up to 5 users over 1 minute
@@ -23,19 +21,16 @@ export let options = {
   },
 };
 
-// Test data
 const books = [
   { id: 1, title: 'Clean Code', author: 'Robert Martin', price: 1500 },
   { id: 2, title: 'Software Architecture', author: 'Martin Fowler', price: 2000 },
   { id: 3, title: 'Python for Professionals', author: 'Dan Bader', price: 1800 }
 ];
 
-// Base URLs
 const BOOKSHOP_URL = __ENV.BOOKSHOP_URL || 'http://localhost:8000';
 const API_STORE_URL = __ENV.API_STORE_URL || 'http://localhost:5050';
 
 export default function () {
-  // Test scenario: Complete user journey
   let bookshopResponse = testBookshop();
   let apiStoreResponse = testApiStore();
   
@@ -45,7 +40,6 @@ export default function () {
 function testBookshop() {
   let responses = {};
   
-  // 1. Get books catalog
   let booksResponse = http.get(`${BOOKSHOP_URL}/api/books`);
   check(booksResponse, {
     'Books API status is 200': (r) => r.status === 200,
@@ -62,7 +56,6 @@ function testBookshop() {
     errorRate.add(false);
   }
 
-  // 2. Add book to cart
   let randomBook = books[Math.floor(Math.random() * books.length)];
   let addToCartPayload = JSON.stringify({
     book_id: randomBook.id,
@@ -83,7 +76,6 @@ function testBookshop() {
   responses.addToCart = cartResponse;
   responseTimeTrend.add(cartResponse.timings.duration);
 
-  // 3. Get cart
   let getCartResponse = http.get(`${BOOKSHOP_URL}/api/cart`);
   check(getCartResponse, {
     'Get cart status is 200': (r) => r.status === 200,
@@ -92,7 +84,6 @@ function testBookshop() {
   
   responses.getCart = getCartResponse;
 
-  // 4. Create order (50% probability)
   if (Math.random() > 0.5) {
     let orderResponse = http.post(
       `${BOOKSHOP_URL}/api/orders`,
@@ -115,7 +106,6 @@ function testBookshop() {
 function testApiStore() {
   let responses = {};
   
-  // 1. Health check
   let healthResponse = http.get(`${API_STORE_URL}/`);
   check(healthResponse, {
     'API Store health status is 200': (r) => r.status === 200,
@@ -125,7 +115,6 @@ function testApiStore() {
   responses.health = healthResponse;
   responseTimeTrend.add(healthResponse.timings.duration);
 
-  // 2. Get purchases
   let purchasesResponse = http.get(`${API_STORE_URL}/purchases`);
   check(purchasesResponse, {
     'Get purchases status is 200': (r) => r.status === 200,
@@ -134,7 +123,6 @@ function testApiStore() {
   
   responses.purchases = purchasesResponse;
 
-  // 3. Create mock purchase (30% probability)
   if (Math.random() > 0.7) {
     let mockPurchase = [{
       order_id: Math.floor(Math.random() * 1000),

@@ -7,23 +7,18 @@ from app.models.order import Order
 from app.models.cart import CartItem
 import os
 import requests
-
 main_bp = Blueprint('main', __name__)
-
 @main_bp.route('/')
 def index():
     """Proxy bookshop frontend from Cloud Storage"""
     try:
-        # Получаем HTML из Cloud Storage
         response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
         if response.status_code == 200:
             return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
         else:
-            # Fallback на локальный файл
             app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
             return send_from_directory(app_dir, 'bookshop-frontend.html')
     except Exception as e:
-        # Fallback на информационную страницу
         return f"""
         <!DOCTYPE html>
         <html>
@@ -43,28 +38,23 @@ def index():
         </body>
         </html>
         """, 200, {'Content-Type': 'text/html; charset=utf-8'}
-
 @main_bp.route('/web')
 def web_index():
     """Serve bookshop frontend as main page"""
-    # Прямой путь к HTML файлу в корне проекта
     app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     return send_from_directory(app_dir, 'bookshop-frontend.html')
-
 @main_bp.route('/api')
 @main_bp.route('/api/')
 @main_bp.route('/status')
 def health_check():
     """Health check endpoint с информацией о сервисе"""
     try:
-        # Подсчитываем статистику
         books_count = Book.query.count()
         authors_count = Author.query.count()
         categories_count = Category.query.count()
         users_count = User.query.count()
         orders_count = Order.query.count()
         cart_items_count = CartItem.query.count()
-        
         return jsonify({
             'service': 'Bookshop Flask API',
             'status': 'healthy',
@@ -134,19 +124,15 @@ def health_check():
             'error': str(e),
             'database': 'disconnected'
         }), 500
-
 @main_bp.route('/health')
 def simple_health():
     """Простой health check для Kubernetes"""
     return jsonify({'status': 'healthy'})
-
 @main_bp.route('/bookshop')
 def serve_bookshop_html():
     """Serve bookshop HTML frontend"""
-    # Используем тот же путь что и в главном маршруте
     app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     return send_from_directory(app_dir, 'bookshop-frontend.html')
-
 @main_bp.route('/api/docs')
 def api_docs():
     """Документация API"""
@@ -176,19 +162,15 @@ def api_docs():
             'OrderItem': 'Элементы заказов'
         }
     })
-
 @main_bp.route('/frontend')
 def frontend():
     """Redirect to main page"""
-    # Путь к директории приложения
     app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     return send_from_directory(app_dir, 'bookshop-frontend.html')
-
 @main_bp.route('/html')
 def html_frontend():
     """Serve HTML frontend (alternative route)"""
     try:
-        # Получаем HTML из Cloud Storage
         response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
         if response.status_code == 200:
             return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
@@ -197,7 +179,6 @@ def html_frontend():
             return send_from_directory(app_dir, 'bookshop-frontend.html')
     except Exception as e:
         return f"<h1>Bookshop Frontend временно недоступен</h1><p>Ошибка: {str(e)}</p><p><a href='/api'>API Documentation</a></p>", 503
-
 @main_bp.route('/shop')
 def shop_frontend():
     """Direct route to bookshop frontend"""
@@ -209,7 +190,6 @@ def shop_frontend():
             return "<h1>Bookshop Frontend</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, {'Content-Type': 'text/html; charset=utf-8'}
     except Exception:
         return "<h1>Bookshop</h1><p>Интерфейс временно недоступен</p><p><a href='/api'>API</a></p>", 503
-
 @main_bp.route('/analytics')
 def analytics_frontend():
     """Serve API Store analytics frontend"""
@@ -221,7 +201,6 @@ def analytics_frontend():
             return "<h1>Analytics</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, {'Content-Type': 'text/html; charset=utf-8'}
     except Exception:
         return "<h1>Analytics</h1><p>Интерфейс временно недоступен</p>", 503
-
 @main_bp.route('/monitoring')
 def monitoring_redirect():
     """Redirect to Grafana monitoring"""
@@ -239,14 +218,11 @@ def monitoring_redirect():
     </body>
     </html>
     """, 200, {'Content-Type': 'text/html; charset=utf-8'}
-
 @main_bp.route('/api-store-frontend')
 def api_store_frontend():
     """Serve API Store frontend"""
-    # Путь к директории приложения
     app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     return send_from_directory(app_dir, 'api-store-frontend.html')
-
 @main_bp.route('/ui')
 def ui_frontend():
     """Serve HTML frontend (UI route)"""

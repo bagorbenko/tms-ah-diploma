@@ -1,19 +1,16 @@
 adminUser: admin
 adminPassword: diploma2024
 
-# Service configuration
 service:
   type: LoadBalancer
   port: 80
   targetPort: 3000
 
-# Persistence
 persistence:
   enabled: true
   size: 10Gi
   storageClassName: standard
 
-# Resources
 resources:
   limits:
     cpu: 500m
@@ -22,7 +19,6 @@ resources:
     cpu: 250m
     memory: 256Mi
 
-# DataSources
 datasources:
   datasources.yaml:
     apiVersion: 1
@@ -37,7 +33,6 @@ datasources:
       url: http://loki.monitoring:3100
       access: proxy
 
-# Dashboard providers
 dashboardProviders:
   dashboardproviders.yaml:
     apiVersion: 1
@@ -51,22 +46,18 @@ dashboardProviders:
       options:
         path: /var/lib/grafana/dashboards/default
 
-# Dashboards
 dashboards:
   default:
-    # Kubernetes cluster monitoring
     kubernetes-cluster:
       gnetId: 7249
       revision: 1
       datasource: Prometheus
     
-    # Application performance monitoring
     application-overview:
       gnetId: 6417
       revision: 1
       datasource: Prometheus
     
-    # Custom microservices dashboard
     microservices-dashboard:
       json: |
         {
@@ -140,7 +131,6 @@ dashboards:
           }
         }
 
-# Environment variables
 env:
   GF_SECURITY_ADMIN_USER: admin
   GF_SECURITY_ADMIN_PASSWORD: diploma2024
@@ -149,17 +139,13 @@ env:
   GF_SERVER_ROOT_URL: "https://grafana-diploma-project.duckdns.org"
   GF_SERVER_SERVE_FROM_SUB_PATH: "false"
 
-# Security context
 securityContext:
   runAsUser: 472
   runAsGroup: 472
   fsGroup: 472
 
-# Node selector for scheduling
 nodeSelector: {}
 
-# Tolerations
 tolerations: []
 
-# Affinity
 affinity: {} 

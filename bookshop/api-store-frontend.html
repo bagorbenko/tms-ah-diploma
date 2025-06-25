@@ -409,7 +409,7 @@
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">📊</div>
+                <div class="stat-icon"></div>
                 <div class="stat-value" id="total-purchases">0</div>
                 <div class="stat-label">Всего покупок</div>
             </div>
@@ -419,7 +419,7 @@
                 <div class="stat-label">Общая выручка</div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">📚</div>
+                <div class="stat-icon"></div>
                 <div class="stat-value" id="unique-books">0</div>
                 <div class="stat-label">Уникальных книг</div>
             </div>
@@ -431,8 +431,8 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('purchases')">📋 Все покупки</button>
-            <button class="tab" onclick="showTab('analytics')">📊 Аналитика</button>
+            <button class="tab active" onclick="showTab('purchases')"> Все покупки</button>
+            <button class="tab" onclick="showTab('analytics')"> Аналитика</button>
             <button class="tab" onclick="showTab('recent')">🕒 Последние заказы</button>
         </div>
 
@@ -450,7 +450,7 @@
                     <label for="price-filter">Мин. цена</label>
                     <input type="number" id="price-filter" class="filter-input" placeholder="0">
                 </div>
-                <button class="refresh-btn" onclick="loadPurchases()">🔄 Обновить</button>
+                <button class="refresh-btn" onclick="loadPurchases()"> Обновить</button>
             </div>
 
             <div id="purchases-content">
@@ -462,7 +462,7 @@
         </div>
 
         <div id="analytics" class="tab-content">
-            <h2>📊 Аналитика продаж</h2>
+            <h2> Аналитика продаж</h2>
             <div id="analytics-content">
                 <div class="loading">
                     <div class="loading-spinner"></div>
@@ -642,7 +642,7 @@
             if (filteredPurchases.length === 0) {
                 purchasesContent.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-icon"></div>
                         <h3>Покупки не найдены</h3>
                         <p>Попробуйте изменить фильтры или создать заказ в Bookshop</p>
                     </div>
@@ -796,7 +796,7 @@
                 analyticsContent.innerHTML = `
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
                         <div>
-                            <h3 style="margin-bottom: 20px;">📚 Топ книг по выручке</h3>
+                            <h3 style="margin-bottom: 20px;"> Топ книг по выручке</h3>
                             ${topBooks.map(([title, data], index) => `
                                 <div class="purchase-card" style="margin-bottom: 10px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -810,7 +810,7 @@
                             `).join('')}
                         </div>
                         <div>
-                            <h3 style="margin-bottom: 20px;">✍️ Топ авторов по выручке</h3>
+                            <h3 style="margin-bottom: 20px;">✍ Топ авторов по выручке</h3>
                             ${topAuthors.map(([author, data], index) => `
                                 <div class="purchase-card" style="margin-bottom: 10px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">

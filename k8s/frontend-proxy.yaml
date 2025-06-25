@@ -17,12 +17,10 @@ data:
             listen 80;
             server_name _;
             
-            # Main frontend - redirect to bookshop
             location / {
                 return 301 /bookshop;
             }
             
-            # Bookshop frontend
             location /bookshop {
                 proxy_pass https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html;
                 proxy_set_header Host storage.googleapis.com;
@@ -31,7 +29,6 @@ data:
                 proxy_ssl_verify off;
             }
             
-            # API Store frontend
             location /api-store {
                 proxy_pass https://storage.googleapis.com/diploma-static-prod-645ba250/api-store-frontend.html;
                 proxy_set_header Host storage.googleapis.com;
@@ -40,7 +37,6 @@ data:
                 proxy_ssl_verify off;
             }
             
-            # Health check
             location /health {
                 return 200 "Frontend Proxy OK\n";
                 add_header Content-Type text/plain;

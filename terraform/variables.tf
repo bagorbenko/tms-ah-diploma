@@ -82,7 +82,6 @@ variable "authorized_networks" {
   description = "List of master authorized networks"
 }
 
-# DuckDNS Configuration
 variable "duckdns_domain" {
   type        = string
   default     = "diploma-project"
