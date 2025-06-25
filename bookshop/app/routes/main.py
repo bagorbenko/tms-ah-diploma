@@ -9,14 +9,23 @@ import os
 
 main_bp = Blueprint('main', __name__)
 
-@main_bp.route('/web')
+@main_bp.route('/')
 def index():
     """Serve bookshop frontend as main page"""
-    # Прямой путь к HTML файлу
-    return send_from_directory('/app/bookshop', 'bookshop-frontend.html')
+    # Прямой путь к HTML файлу в корне проекта
+    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    return send_from_directory(app_dir, 'bookshop-frontend.html')
+
+@main_bp.route('/web')
+def web_index():
+    """Serve bookshop frontend as main page"""
+    # Прямой путь к HTML файлу в корне проекта
+    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    return send_from_directory(app_dir, 'bookshop-frontend.html')
 
 @main_bp.route('/api')
 @main_bp.route('/api/')
+@main_bp.route('/status')
 def health_check():
     """Health check endpoint с информацией о сервисе"""
     try:
@@ -106,12 +115,9 @@ def simple_health():
 @main_bp.route('/bookshop')
 def serve_bookshop_html():
     """Serve bookshop HTML frontend"""
-    try:
-        with open('/app/bookshop/bookshop-frontend.html', 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        return html_content, 200, {'Content-Type': 'text/html; charset=utf-8'}
-    except FileNotFoundError:
-        return "HTML file not found", 404
+    # Используем тот же путь что и в главном маршруте
+    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    return send_from_directory(app_dir, 'bookshop-frontend.html')
 
 @main_bp.route('/api/docs')
 def api_docs():
@@ -160,11 +166,11 @@ def api_store_frontend():
 @main_bp.route('/html')
 def html_frontend():
     """Serve HTML frontend (alternative route)"""
-    # Прямой путь к HTML файлу
-    return send_from_directory('/app/bookshop', 'bookshop-frontend.html')
+    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    return send_from_directory(app_dir, 'bookshop-frontend.html')
 
 @main_bp.route('/ui')
 def ui_frontend():
     """Serve HTML frontend (UI route)"""
-    # Прямой путь к HTML файлу
-    return send_from_directory('/app/bookshop', 'bookshop-frontend.html') 
+    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    return send_from_directory(app_dir, 'bookshop-frontend.html') 
