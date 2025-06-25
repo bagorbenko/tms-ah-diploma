@@ -184,18 +184,68 @@ def frontend():
     app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     return send_from_directory(app_dir, 'bookshop-frontend.html')
 
+@main_bp.route('/html')
+def html_frontend():
+    """Serve HTML frontend (alternative route)"""
+    try:
+        # Получаем HTML из Cloud Storage
+        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
+        if response.status_code == 200:
+            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        else:
+            app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+            return send_from_directory(app_dir, 'bookshop-frontend.html')
+    except Exception as e:
+        return f"<h1>Bookshop Frontend временно недоступен</h1><p>Ошибка: {str(e)}</p><p><a href='/api'>API Documentation</a></p>", 503
+
+@main_bp.route('/shop')
+def shop_frontend():
+    """Direct route to bookshop frontend"""
+    try:
+        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/bookshop-frontend.html', timeout=10)
+        if response.status_code == 200:
+            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        else:
+            return "<h1>Bookshop Frontend</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+    except Exception:
+        return "<h1>Bookshop</h1><p>Интерфейс временно недоступен</p><p><a href='/api'>API</a></p>", 503
+
+@main_bp.route('/analytics')
+def analytics_frontend():
+    """Serve API Store analytics frontend"""
+    try:
+        response = requests.get('https://storage.googleapis.com/diploma-static-prod-645ba250/api-store-frontend.html', timeout=10)
+        if response.status_code == 200:
+            return response.text, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        else:
+            return "<h1>Analytics</h1><p>Загружается...</p><script>setTimeout(() => location.reload(), 3000);</script>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+    except Exception:
+        return "<h1>Analytics</h1><p>Интерфейс временно недоступен</p>", 503
+
+@main_bp.route('/monitoring')
+def monitoring_redirect():
+    """Redirect to Grafana monitoring"""
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Monitoring - Grafana</title>
+        <meta http-equiv="refresh" content="0; URL=http://34.76.217.129:32743">
+    </head>
+    <body>
+        <h1>Redirecting to Grafana...</h1>
+        <p>If not redirected: <a href="http://34.76.217.129:32743">Grafana Dashboard</a></p>
+        <p>Login: admin / Password: diploma-2025</p>
+    </body>
+    </html>
+    """, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
 @main_bp.route('/api-store-frontend')
 def api_store_frontend():
     """Serve API Store frontend"""
     # Путь к директории приложения
     app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     return send_from_directory(app_dir, 'api-store-frontend.html')
-
-@main_bp.route('/html')
-def html_frontend():
-    """Serve HTML frontend (alternative route)"""
-    app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-    return send_from_directory(app_dir, 'bookshop-frontend.html')
 
 @main_bp.route('/ui')
 def ui_frontend():
