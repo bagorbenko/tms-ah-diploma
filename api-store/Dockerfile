@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Базовый образ с Python 3.10 на Debian slim
-FROM python:3.10-slim
+FROM python:3.14.0rc1-slim
 
 # Устанавливаем переменные окружения для UTF-8
 ENV LANG=C.UTF-8
