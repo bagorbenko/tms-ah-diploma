@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.14.0rc1-slim
 
 # Устанавливаем переменные окружения для UTF-8
 ENV LANG=C.UTF-8
